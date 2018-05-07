@@ -129,8 +129,16 @@ static int japi_process_request(japi_context *ctx, const char *request, char **r
 	/* Try to find a suitable handler for the given command */
 	cmd_handler = japi_get_command_handler(ctx, cmd_name);
 	if (cmd_handler == NULL) {
-		fprintf(stderr, "ERROR: No suitable command handler found. Command was: %s\n", cmd_name);
-		goto out_free;
+
+		/* No command handler found? Check if a fallback handler was registered. */
+		cmd_handler = japi_get_command_handler(ctx, "JAPI_COMMAND_NOT_FOUND");
+
+		if (cmd_handler == NULL) {
+			fprintf(stderr, "ERROR: No suitable command handler found. Command was: %s\n", cmd_name);
+			goto out_free;
+		} else {
+			fprintf(stderr, "WARNING: No suitable command handler found. Falling back to registered fallback handler. Command was: %s\n", cmd_name);
+		}
 	}
 
 	/* Call command handler */

@@ -1,3 +1,7 @@
+Next
+=====
+* Added support to register a custom "command not found" handler
+
 0.1.0
 =====
 * initial release
