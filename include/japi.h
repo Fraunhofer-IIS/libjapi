@@ -17,7 +17,7 @@
 #ifndef __JAPI_H__
 #define __JAPI_H__
 
-#include <json/json.h>
+#include <json-c/json.h>
 
 #include <creadline.h>
 
