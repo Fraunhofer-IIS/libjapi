@@ -261,16 +261,6 @@ int japi_start_server(japi_context *ctx, const char *port)
 				return -1;
 			}
 
-			/* Check whether there are new clients */
-			if (FD_ISSET(server_socket, &fdrd)) {
-
-				/* Drop new client immediately since we can
-				 * only handle one connection at a time */
-				int tmp_sock;
-				tmp_sock = accept(server_socket, NULL, NULL);
-				close(tmp_sock);
-			}
-
 			/* Check whether there is data to process */
 			if (FD_ISSET(client_socket, &fdrd)) {
 
@@ -310,7 +300,6 @@ int japi_start_server(japi_context *ctx, const char *port)
 					} else {
 						/* Received an empty line */
 						free(request);
-						continue;
 					}
 				} else {
 					fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
@@ -318,6 +307,17 @@ int japi_start_server(japi_context *ctx, const char *port)
 					break;
 				}
 			}
+
+			/* Check whether there are new clients */
+			if (FD_ISSET(server_socket, &fdrd)) {
+
+				/* Drop new client immediately since we can
+				 * only handle one connection at a time */
+				int tmp_sock;
+				tmp_sock = accept(server_socket, NULL, NULL);
+				close(tmp_sock);
+			}
+
 		}
 	}
 
