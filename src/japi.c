@@ -33,32 +33,32 @@
  */
 static const char* japi_get_value_as_str(json_object *jobj, const char *key)
 {
-	json_object *jcmd;
+	json_object *jval;
 
-	if (json_object_object_get_ex(jobj, key, &jcmd)) {
-		if (json_object_is_type(jcmd, json_type_string)) {
-			return json_object_get_string(jcmd);
+	if (json_object_object_get_ex(jobj, key, &jval)) {
+		if (json_object_is_type(jval, json_type_string)) {
+			return json_object_get_string(jval);
 		}
 	}
 
 	return NULL;
 }
 
-/* Look for a command handler matching the name 'name'.
+/* Look for a request handler matching the name 'name'.
  *
  * NULL is returned if no suitable handler was found.
  */
-static japi_cmd_handler japi_get_command_handler(japi_context *ctx, const char *name)
+static japi_req_handler japi_get_request_handler(japi_context *ctx, const char *name)
 {
-	japi_command *cmd;
+	japi_request *req;
 
-	cmd = ctx->commands;
-	while (cmd != NULL) {
+	req = ctx->requests;
+	while (req != NULL) {
 
-		if (strcasecmp(name, cmd->name) == 0) {
-			return cmd->func;
+		if (strcasecmp(name, req->name) == 0) {
+			return req->func;
 		}
-		cmd = cmd->next;
+		req = req->next;
 	}
 
 	return NULL;
@@ -95,18 +95,18 @@ static char* japi_get_response_as_str(json_object *jobj)
 
 /* Steps performed while processing a JSON request:
  * - Convert the received message into a JSON object
- * - Extract the command name
- * - Search a suitable command handler
- * - Call the command handler
+ * - Extract the request name
+ * - Search a suitable request handler
+ * - Call the request handler
  * - Prepare the JSON response
  * - Free memory
  */
 static int japi_process_request(japi_context *ctx, const char *request, char **response)
 {
-	const char* cmd_name;
+	const char* req_name;
 	json_object *jreq;
 	json_object *jresp;
-	japi_cmd_handler cmd_handler;
+	japi_req_handler req_handler;
 	int ret;
 
 	ret = -1;
@@ -119,31 +119,31 @@ static int japi_process_request(japi_context *ctx, const char *request, char **r
 		return -1;
 	}
 
-	/* Get command name */
-	cmd_name = japi_get_value_as_str(jreq, "JAPI_COMMAND");
-	if (cmd_name == NULL) {
-		fprintf(stderr, "ERROR: JAPI_COMMAND not found!\n");
+	/* Get request name */
+	req_name = japi_get_value_as_str(jreq, "japi_request");
+	if (req_name == NULL) {
+		fprintf(stderr, "ERROR: japi_request keyword not found!\n");
 		goto out_free;
 	}
 
-	/* Try to find a suitable handler for the given command */
-	cmd_handler = japi_get_command_handler(ctx, cmd_name);
-	if (cmd_handler == NULL) {
+	/* Try to find a suitable handler for the given request */
+	req_handler = japi_get_request_handler(ctx, req_name);
+	if (req_handler == NULL) {
 
-		/* No command handler found? Check if a fallback handler was registered. */
-		cmd_handler = japi_get_command_handler(ctx, "JAPI_COMMAND_NOT_FOUND");
+		/* No request handler found? Check if a fallback handler was registered. */
+		req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
 
-		if (cmd_handler == NULL) {
-			fprintf(stderr, "ERROR: No suitable command handler found. Command was: %s\n", cmd_name);
+		if (req_handler == NULL) {
+			fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
 			goto out_free;
 		} else {
-			fprintf(stderr, "WARNING: No suitable command handler found. Falling back to registered fallback handler. Command was: %s\n", cmd_name);
+			fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
 		}
 	}
 
-	/* Call command handler */
+	/* Call request handler */
 	jresp = NULL;
-	cmd_handler(ctx, jreq, &jresp);
+	req_handler(ctx, jreq, &jresp);
 
 	/* Prepare response */
 	if (jresp != NULL) {
@@ -172,43 +172,43 @@ japi_context* japi_init(void *userptr)
 
 	ctx->userptr = userptr;
 	ctx->socket = -1;
-	ctx->commands = NULL;
+	ctx->requests = NULL;
 
 	return ctx;
 }
 
 void japi_destroy(japi_context *ctx)
 {
-	japi_command *cmd, *cmd_next;
+	japi_request *req, *req_next;
 
 	if (ctx != NULL) {
 
-		cmd = ctx->commands;
-		while (cmd != NULL) {
-			cmd_next = cmd->next;
-			free(cmd);
-			cmd = cmd_next;
+		req = ctx->requests;
+		while (req != NULL) {
+			req_next = req->next;
+			free(req);
+			req = req_next;
 		}
 
 		free(ctx);
 	}
 }
 
-int japi_register_command(japi_context* ctx, const char *cmd_name, japi_cmd_handler cmd_handler)
+int japi_register_request(japi_context* ctx, const char *req_name, japi_req_handler req_handler)
 {
-	japi_command *cmd;
+	japi_request *req;
 
-	cmd = malloc(sizeof(japi_command));
-	if (cmd == NULL) {
+	req = malloc(sizeof(japi_request));
+	if (req == NULL) {
 		perror("malloc() failed");
 		return -1;
 	}
 
-	cmd->name = cmd_name;
-	cmd->func = cmd_handler;
-	cmd->next = ctx->commands;
+	req->name = req_name;
+	req->func = req_handler;
+	req->next = ctx->requests;
 
-	ctx->commands = cmd;
+	ctx->requests = req;
 
 	return 0;
 }

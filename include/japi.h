@@ -30,24 +30,24 @@ typedef struct __japi_context {
 	int socket; /*!< File descriptor to reach the client */
 	void *userptr; /*!< Pointer to user data */
 	creadline_buf_t crl_buffer; /*!< Buffer used by creadline_r() */
-	struct __japi_command *commands; /*!< Pointer to the JAPI command list */
+	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
 } japi_context;
 
 /**
- * \brief JAPI command handler type.
+ * \brief JAPI request handler type.
  */
-typedef void (*japi_cmd_handler)(japi_context *ctx, json_object *request, json_object **response);
+typedef void (*japi_req_handler)(japi_context *ctx, json_object *request, json_object **response);
 
 /*!
- * \brief JAPI command struct.
+ * \brief JAPI request struct.
  *
- * A JAPI command struct is a mapping between a unique command name and a JAPI command handler.
+ * A JAPI request struct is a mapping between a unique request name and a JAPI request handler.
  */
-typedef struct __japi_command {
-	const char *name; /*!< Printable name of the command */
-	japi_cmd_handler func; /*!< Function to call */
-	struct __japi_command* next; /*!< Pointer to the next command or NULL */
-} japi_command;
+typedef struct __japi_request {
+	const char *name; /*!< Printable name of the request */
+	japi_req_handler func; /*!< Function to call */
+	struct __japi_request* next; /*!< Pointer to the next request struct or NULL */
+} japi_request;
 
 /*!
  * \brief Create and initialize a new JAPI context.
@@ -55,7 +55,7 @@ typedef struct __japi_command {
  * Create, initialize and return a new japi_context object.
  *
  * \param userptr	Pointer to user data or NULL. If a valid pointer is
- *					provided a command handler can access that data later.
+ *					provided a request handler can access that data later.
  *
  * \returns	On success, a japi_context object is returned. On error, NULL is returned.
  */
@@ -71,18 +71,18 @@ japi_context* japi_init(void *userptr);
 void japi_destroy(japi_context *ctx);
 
 /*!
- * \brief Register a JAPI command handler
+ * \brief Register a JAPI request handler
  *
- * Register a JAPI command handler provided as a function pointer cmd_handler
- * for the command specified by cmd_name.
+ * Register a JAPI request handler provided as a function pointer req_handler
+ * for the request specified by req_name.
  *
  * \param ctx			JAPI context
- * \param cmd_name		Command name
- * \param cmd_handler	Function pointer
+ * \param req_name		Request name
+ * \param req_handler	Function pointer
  *
  * \returns	On success, zero is returned. On error, -1 is returned.
  */
-int japi_register_command(japi_context *ctx, const char *cmd_name, japi_cmd_handler cmd_handler);
+int japi_register_request(japi_context *ctx, const char *req_name, japi_req_handler req_handler);
 
 /*!
  * \brief Start a JAPI server
