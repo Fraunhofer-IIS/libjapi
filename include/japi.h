@@ -36,7 +36,7 @@ typedef struct __japi_context {
 /**
  * \brief JAPI request handler type.
  */
-typedef void (*japi_req_handler)(japi_context *ctx, json_object *request, json_object **response);
+typedef void (*japi_req_handler)(japi_context *ctx, json_object *request, json_object *response);
 
 /*!
  * \brief JAPI request struct.

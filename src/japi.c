@@ -141,15 +141,16 @@ static int japi_process_request(japi_context *ctx, const char *request, char **r
 		}
 	}
 
-	/* Call request handler */
-	jresp = NULL;
-	req_handler(ctx, jreq, &jresp);
-
 	/* Prepare response */
-	if (jresp != NULL) {
-		*response = japi_get_response_as_str(jresp);
-		json_object_put(jresp);
-	}
+	jresp = json_object_new_object();
+        json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
+
+	/* Call request handler */
+	req_handler(ctx, jreq, jresp);
+
+	/* Stringify response */
+	*response = japi_get_response_as_str(jresp);
+	json_object_put(jresp);
 
 	ret = 0;
 
