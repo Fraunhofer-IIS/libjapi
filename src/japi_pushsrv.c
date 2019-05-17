@@ -32,21 +32,27 @@
  */
 void japi_pushsrv_subscribe(japi_context *ctx, int socket, const char* pushsrv_name, json_object *jobj)
 {
-	japi_pushsrv_context *jps;
+	japi_pushsrv_context *psc;
 
-	jps = ctx->push_services;
+	/* Error handling */
+	assert(ctx != NULL);
+	assert(socket != -1);
+	assert(pushsrv_name != NULL);
+	assert(jobj != NULL);
+
+	psc = ctx->push_services;
 
 	/* Search for push service in list and save socket, if found */
-	while (jps != NULL) {
-		if (strcasecmp(pushsrv_name,jps->pushsrv_name) == 0) {
-			jps->subscribed_clients[0] = socket;
+	while (psc != NULL) {
+		if (strcasecmp(pushsrv_name,psc->pushsrv_name) == 0) {
+			psc->subscribed_clients[0] = socket;
 			break;
 		}
-		jps = jps->next;
+		psc = psc->next;
 	}
 
 	/* Create JSON response object */
-	if (jps != NULL) {
+	if (psc != NULL) {
 		json_object_object_add(jobj,"japi_pushsrv_response",json_object_new_string(pushsrv_name));
 		json_object_object_add(jobj,"success",json_object_new_boolean(TRUE));
 	} else {
@@ -61,23 +67,29 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, const char* pushsrv_n
  */
 void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, const char* pushsrv_name, json_object *jobj)
 {
-	japi_pushsrv_context *jps;
+	japi_pushsrv_context *psc;
 
-	jps = ctx->push_services;
+	/* Error handling */
+	assert(ctx != NULL);
+	assert(socket != -1);
+	assert(pushsrv_name != NULL);
+	assert(jobj != NULL);
+
+	psc = ctx->push_services;
 	bool registered = false; /* Service registered? */
 	bool unsubscribed = false; /* Service unsubscribed? */
 
 	/* Search for push service in list and remove socket, if found & socket is set */
-	while (jps != NULL) {
-		if (strcasecmp(pushsrv_name,jps->pushsrv_name) == 0) {
+	while (psc != NULL) {
+		if (strcasecmp(pushsrv_name,psc->pushsrv_name) == 0) {
 			registered = true;
-			if (jps->subscribed_clients[0] != -1) {
-				jps->subscribed_clients[0] = -1;
+			if (psc->subscribed_clients[0] != -1) {
+				psc->subscribed_clients[0] = -1;
 				unsubscribed = true;
 				break;
 			}
 		}
-		jps = jps->next;
+		psc = psc->next;
 	}
 
 	/* Create JSON response object */
@@ -95,6 +107,32 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, const char* pushsrv
 	}
 }
 
+/* Check if there is a duplicate name for a request */
+static bool pushsrv_isredundant(japi_context *ctx, const char *pushsrv_name)
+{
+	japi_pushsrv_context *psc;
+	bool duplicate;
+
+	duplicate = FALSE;
+	psc = ctx->push_services;
+
+	while (psc != NULL) {
+		if (strcmp(psc->pushsrv_name, pushsrv_name) == 0) {
+			duplicate = TRUE;
+			break;
+		}
+		psc = psc->next;
+	}
+	return duplicate;
+}
+
+/* Free memory for duplicated push service name and element */
+static void free_pushsrv(japi_pushsrv_context *psc)
+{
+	free(psc->pushsrv_name);
+	free(psc);
+}
+
 /*
  * Registers push-service and returns pointer to that service object.
  */
@@ -102,10 +140,25 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context* ctx, const char* pushs
 {
 	japi_pushsrv_context *psc;
 
+	if (ctx == NULL) {
+		fprintf(stderr,"ERROR: JAPI context is NULL.\n");
+		return NULL;
+	}
+
+	if ((pushsrv_name == NULL) || (strcmp(pushsrv_name,"") == 0)) {
+		fprintf(stderr,"ERROR: Push service name is NULL or empty.\n");
+		return NULL;
+	}
+
+	if (pushsrv_isredundant(ctx,pushsrv_name)) {
+		fprintf(stderr,"ERROR: A push service called '%s' was already registered.\n",pushsrv_name);
+		return NULL;
+	}
+
 	/* Reserve memory for japi_pushsrv_context struct */
-	psc = malloc(sizeof(japi_pushsrv_context));
+	psc = (japi_pushsrv_context *)malloc(sizeof(japi_pushsrv_context));
 	if (psc == NULL) {
-		perror("malloc() failed");
+		perror("ERROR: malloc() failed");
 		return NULL;
 	}
 
@@ -128,13 +181,6 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context* ctx, const char* pushs
 	ctx->push_services = psc;
 
 	return psc;
-}
-
-/* Free memory for duplicated push service name and element */
-static void free_pushsrv(japi_pushsrv_context *psc)
-{
-	free(psc->pushsrv_name);
-	free(psc);
 }
 
 /*
@@ -160,6 +206,9 @@ void japi_pushsrv_shutdown_all(japi_context *ctx)
 
 /*
  * Provide the names of all registered push-services as a JAPI response.
+ *
+ * NOTE: Parameter 'request' declared, although not used in function.
+ * Function declaration needs to be identical to respective handler.
  */
 void japi_pushsrv_list(japi_context *ctx, json_object *request, json_object *response)
 {
@@ -205,7 +254,7 @@ int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg)
 
 	/* Return -1 if there is no message to send */
 	if (jmsg == NULL) {
-		fprintf(stderr,"Nothing to send\n");
+		fprintf(stderr,"ERROR: Nothing to send.\n");
 		return -1;
 	}
 
@@ -258,12 +307,12 @@ static void *generic_pushsrv_runner(void *arg)
 int japi_pushsrv_start(japi_pushsrv_context *psc, japi_pushsrv_routine routine)
 {
 	if (psc == NULL) {
-		fprintf(stderr,"ERROR: No push service context passed. Not starting thread");
+		fprintf(stderr,"ERROR: No push service context passed. Not starting thread.\n");
 		return -1;
 	}
 
 	if (routine == NULL) {
-		fprintf(stderr,"ERROR: No routine passed. Not starting thread");
+		fprintf(stderr,"ERROR: No routine passed. Not starting thread.\n");
 		return -2;
 	}
 
@@ -271,7 +320,7 @@ int japi_pushsrv_start(japi_pushsrv_context *psc, japi_pushsrv_routine routine)
 	psc->routine = routine;
 
 	if (pthread_create(&(psc->thread_id),NULL,generic_pushsrv_runner,(void*)psc) != 0) {
-		fprintf(stderr, "Error creating push service thread\n");
+		fprintf(stderr, "ERROR: Error creating push service thread.\n");
 		psc->enabled = false;
 		return -3;
 	}
@@ -285,12 +334,12 @@ int japi_pushsrv_start(japi_pushsrv_context *psc, japi_pushsrv_routine routine)
 int japi_pushsrv_stop(japi_pushsrv_context *psc)
 {
 	if (psc == NULL) {
-		fprintf(stderr,"ERROR: No push service context passed. Can't stop thread");
+		fprintf(stderr,"ERROR: No push service context passed. Can't stop thread.\n");
 		return -1;
 	}
 
 	if (psc->enabled == false) {
-		fprintf(stderr,"Thread not running. Exiting");
+		fprintf(stderr,"ERROR: Thread not running.\n");
 		return -2;
 	}
 
@@ -299,7 +348,7 @@ int japi_pushsrv_stop(japi_pushsrv_context *psc)
 
 	/* Wait for thread to end and close it */
 	if (pthread_join(psc->thread_id,NULL) != 0) {
-		fprintf(stderr, "Error joining push service routine %s\n",psc->pushsrv_name);
+		fprintf(stderr, "ERROR: Error joining push service routine '%s'\n",psc->pushsrv_name);
 		return -3;
 	}
 

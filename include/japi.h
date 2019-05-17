@@ -66,7 +66,7 @@ japi_context* japi_init(void *userptr);
  *
  * Destroy the JAPI context pointed to by ctx and release allocated memory.
  *
- * \param ctx			JAPI context
+ * \param ctx	JAPI context
  */
 void japi_destroy(japi_context *ctx);
 
@@ -76,11 +76,15 @@ void japi_destroy(japi_context *ctx);
  * Register a JAPI request handler provided as a function pointer req_handler
  * for the request specified by req_name.
  *
- * \param ctx			JAPI context
- * \param req_name		Request name
+ * \param ctx		JAPI context
+ * \param req_name	Request name
  * \param req_handler	Function pointer
  *
- * \returns	On success, zero is returned. On error, -1 is returned.
+ * \returns	On success, zero is returned. On error, -1 for empty context,
+ * -2 for empty request name,
+ * -3 for empty request handler,
+ * -4 for failed memory allocation,
+ * -5 for duplicate naming, is returned.
  */
 int japi_register_request(japi_context *ctx, const char *req_name, japi_req_handler req_handler);
 
@@ -89,8 +93,8 @@ int japi_register_request(japi_context *ctx, const char *req_name, japi_req_hand
  *
  * Start a JAPI server on the given port.
  *
- * \param ctx		JAPI context
- * \param port		Port to be used by the JAPI server
+ * \param ctx	JAPI context
+ * \param port	Port to be used by the JAPI server
  *
  * \returns	Only returns in case of an error.
  */
