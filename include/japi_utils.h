@@ -19,6 +19,31 @@
 
 #include <json-c/json.h>
 
+
+/*!
+ * \brief Get string value from json key
+ *
+ * Return string for the given json key value.
+ *
+ * \param jobj	The json-object to parse
+ * \param key	The corresponding key value
+ *
+ * \returns	On success, string is returned. On error, NULL is returned.
+ */
+const char* japi_get_value_as_str(json_object *jobj, const char *key);
+
+/*!
+ * \brief Get boolean value from json key
+ *
+ * Return boolean for the given json key value.
+ *
+ * \param jobj	The json-object to parse
+ * \param key	The corresponding key value
+ *
+ * \returns	On success, boolean is returned. On error, NULL is returned.
+ */
+bool japi_get_value_as_bool(json_object *jobj, const char *key);
+
 /*!
  * \brief Returns a string with added newline
  *

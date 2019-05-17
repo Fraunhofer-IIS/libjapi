@@ -14,6 +14,7 @@
  * All rights reserved.
  */
 
+#include <assert.h>
 #include <stdio.h> /* printf, fprintf */
 #include <string.h> /* strcasecmp */
 #include <sys/socket.h>
@@ -22,28 +23,12 @@
 #include "japi.h"
 
 #include "creadline.h"
+#include "japi_intern.h"
 #include "japi_pushsrv.h"
 #include "japi_utils.h"
 #include "rw_n.h"
 #include "networking.h"
 
-/* Look for a JSON object with the key 'key' and return its value as a string.
- *
- * NULL is returned if there is no object with a key 'key' or if the value is
- * not a string type.
- */
-static const char* japi_get_value_as_str(json_object *jobj, const char *key)
-{
-	json_object *jval;
-
-	if (json_object_object_get_ex(jobj, key, &jval)) {
-		if (json_object_is_type(jval, json_type_string)) {
-			return json_object_get_string(jval);
-		}
-	}
-
-	return NULL;
-}
 
 /* Look for a request handler matching the name 'name'.
  *
@@ -73,7 +58,7 @@ static japi_req_handler japi_get_request_handler(japi_context *ctx, const char *
  * - Prepare the JSON response
  * - Free memory
  */
-static int japi_process_message(japi_context *ctx, const char *request, char **response, int socket)
+int japi_process_message(japi_context *ctx, const char *request, char **response, int socket)
 {
 	const char* req_name;
 	const char* pushsrv_name;
@@ -81,6 +66,11 @@ static int japi_process_message(japi_context *ctx, const char *request, char **r
 	json_object *jresp;
 	japi_req_handler req_handler;
 	int ret;
+
+	assert(ctx != NULL);
+	assert(request != NULL);
+	assert(response != NULL);
+	assert(socket != -1);
 
 	ret = -1;
 	*response = NULL;
@@ -161,10 +151,31 @@ int japi_register_request(japi_context* ctx, const char *req_name, japi_req_hand
 {
 	japi_request *req;
 
-	req = malloc(sizeof(japi_request));
-	if (req == NULL) {
-		perror("malloc() failed");
+	/* Error handling */
+	if (ctx == NULL) {
+		fprintf(stderr, "ERROR: JAPI context is NULL.\n");
 		return -1;
+	}
+
+	if ((req_name == NULL) || (strcmp(req_name,"") == 0)) {
+		fprintf(stderr, "ERROR: Request name is NULL or empty.\n");
+		return -2;
+	}
+
+	if (req_handler == NULL) {
+		fprintf(stderr, "ERROR: Request handler is NULL.\n");
+		return -3;
+	}
+
+	if (japi_get_request_handler(ctx,req_name) != NULL) {
+		fprintf(stderr,"ERROR: A request handler called '%s' was already registered.\n",req_name);
+		return -5;
+	}
+
+	req = (japi_request *)malloc(sizeof(japi_request));
+	if (req == NULL) {
+		perror("ERROR: malloc() failed");
+		return -4;
 	}
 
 	req->name = req_name;
@@ -180,9 +191,9 @@ japi_context* japi_init(void *userptr)
 {
 	japi_context *ctx;
 
-	ctx = malloc(sizeof(japi_context));
+	ctx = (japi_context *)malloc(sizeof(japi_context));
 	if (ctx == NULL) {
-		perror("malloc() failed");
+		perror("ERROR: malloc() failed");
 		return NULL;
 	}
 
@@ -204,7 +215,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 
 	server_socket = tcp_start_server(port);
 	if (server_socket < 0) {
-		fprintf(stderr, "Error: Failed to start tcp server on port %s\n", port);
+		fprintf(stderr, "ERROR: Failed to start tcp server on port %s\n", port);
 		return -1;
 	}
 
@@ -217,13 +228,13 @@ int japi_start_server(japi_context *ctx, const char *port)
 		ctx->socket = -1;
 
 		if (listen(server_socket, 1) != 0) {
-			perror("listen() failed");
+			perror("ERROR: listen() failed");
 			return -1;
 		}
 
 		client_socket = accept(server_socket, NULL, NULL);
 		if (client_socket < 0) {
-			perror("accept() failed");
+			perror("ERROR: accept() failed");
 			return -1;
 		}
 
@@ -240,7 +251,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 
 			ret = select(nfds, &fdrd, NULL, NULL, NULL);
 			if (ret == -1) {
-				perror("select() failed");
+				perror("ERROR: select() failed");
 				return -1;
 			}
 

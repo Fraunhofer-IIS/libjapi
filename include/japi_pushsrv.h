@@ -49,10 +49,10 @@ typedef struct __japi_pushsrv_context {
  *
  * Register a JAPI push service specified by pushsrv_name.
  *
- * \param ctx                 JAPI context
- * \param pushsrv_name        Push-Service name
+ * \param ctx		JAPI context
+ * \param pushsrv_name	Push-Service name
  *
- * \returns On success, a pointer to the japi_push_service context is returned. On error, NULL is returned.
+ * \returns	On success, a pointer to the japi_push_service context is returned. On error, NULL is returned
  */
 japi_pushsrv_context* japi_pushsrv_register(japi_context *ctx, const char *pushsrv_name);
 
@@ -61,10 +61,10 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context *ctx, const char *pushs
  *
  * Subscribe a registered JAPI push service specified by pushsrv_name.
  *
- * \param ctx     JAPI context
- * \param socket  Client socket
- * \param pushsrv_name Push-Service name
- * \param jresp   Response JSON object
+ * \param ctx		JAPI context
+ * \param socket	Client socket
+ * \param pushsrv_name	Push-Service name
+ * \param jresp		Response JSON object
  */
 void japi_pushsrv_subscribe(japi_context *ctx, int socket, const char* pushsrv_name, json_object *jresp);
 
@@ -73,10 +73,10 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, const char* pushsrv_n
  *
  * Unsubscribe a registered JAPI push service specified by pushsrv_name.
  *
- * \param ctx           JAPI context
- * \param socket        Client socket
- * \param pushsrv_name  Push-Service name
- * \param jresp         Response JSON object
+ * \param ctx		JAPI context
+ * \param socket	Client socket
+ * \param pushsrv_name	Push-Service name
+ * \param jresp		Response JSON object
  */
 void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, const char* pushsrv_name, json_object *jresp);
 
@@ -85,9 +85,9 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, const char* pushsrv
  *
  * Provides the names of all registered push-services as a JAPI response.
  *
- * \param ctx      JAPI context
- * \param request  Pointer to JAPI JSON request
- * \param response Pointer to JAPI JSON response
+ * \param ctx		JAPI context
+ * \param request 	Pointer to JAPI JSON request
+ * \param response	Pointer to JAPI JSON response
  */
 void japi_pushsrv_list(japi_context *ctx, json_object *request, json_object *response);
 
@@ -96,7 +96,7 @@ void japi_pushsrv_list(japi_context *ctx, json_object *request, json_object *res
  *
  * Iterates trough push services and frees memory for push service elements.
  *
- * \param ctx       JAPI context
+ * \param ctx	JAPI context
  */
 void japi_pushsrv_shutdown_all(japi_context *ctx);
 
@@ -105,10 +105,10 @@ void japi_pushsrv_shutdown_all(japi_context *ctx);
  *
  * Send message to all subscribed clients of a push service.
  *
- * \param psc           JAPI push service context
- * \param jmsg          JSON push message
+ * \param psc	JAPI push service context
+ * \param jmsg	JSON push message
  *
- * \returns On success, number of successful send messages is returned. 0 is returned, if no client is subscribed. On error, -1 is returned.
+ * \returns	On success, number of successful send messages is returned. 0 is returned, if no client is subscribed. On error, -1 is returned.
  */
 int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg);
 
@@ -117,10 +117,10 @@ int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg);
   *
   * Create thread and start push service routine.
   *
-  * \param psc            JAPI push service context
-  * \param routine Thread Push service routine
+  * \param psc		JAPI push service context
+  * \param routine	Thread Push service routine
   *
-  * \returns On success, 0 is returned. On error, -1 is returned.
+  * \returns	On success, 0 is returned. On error, -1 is returned.
   */
 int japi_pushsrv_start(japi_pushsrv_context *psc, japi_pushsrv_routine routine);
 
@@ -131,7 +131,7 @@ int japi_pushsrv_start(japi_pushsrv_context *psc, japi_pushsrv_routine routine);
   *
   * \param psc	JAPI push service context
   *
-  * \returns On success, 0 is returned. On error, -1 is returned, -2 if thread is not running.
+  * \returns	On success, 0 is returned. On error, -1 is returned, -2 if thread is not running.
   */
 int japi_pushsrv_stop(japi_pushsrv_context *psc);
 
