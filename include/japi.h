@@ -18,7 +18,6 @@
 #define __JAPI_H__
 
 #include <json-c/json.h>
-
 #include <creadline.h>
 
 /*!
@@ -31,9 +30,10 @@ typedef struct __japi_context {
 	void *userptr; /*!< Pointer to user data */
 	creadline_buf_t crl_buffer; /*!< Buffer used by creadline_r() */
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
+	struct __japi_pushsrv_context *push_services; /*!< Pointer to the JAPI push service list */
 } japi_context;
 
-/**
+/*!
  * \brief JAPI request handler type.
  */
 typedef void (*japi_req_handler)(japi_context *ctx, json_object *request, json_object *response);
@@ -97,4 +97,3 @@ int japi_register_request(japi_context *ctx, const char *req_name, japi_req_hand
 int japi_start_server(japi_context *ctx, const char *port);
 
 #endif /* __JAPI_H__ */
-

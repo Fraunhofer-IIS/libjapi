@@ -16,15 +16,16 @@
 
 #include <stdio.h> /* printf, fprintf */
 #include <string.h> /* strcasecmp */
-
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include "japi.h"
 
+#include "creadline.h"
+#include "japi_pushsrv.h"
+#include "japi_utils.h"
 #include "rw_n.h"
 #include "networking.h"
-#include "creadline.h"
 
 /* Look for a JSON object with the key 'key' and return its value as a string.
  *
@@ -64,35 +65,6 @@ static japi_req_handler japi_get_request_handler(japi_context *ctx, const char *
 	return NULL;
 }
 
-/* Stringify the JSON object, copy it to a new allocated buffer and append a
- * newline. This is necessary to ensure that a call to write() will send the
- * message at once, meaning the message and the newline are not separated in
- * two strings.
- *
- * The caller is responsible for freeing the returned string.
- */
-static char* japi_get_response_as_str(json_object *jobj)
-{
-	const char *tmp_str;
-	char *response;
-	size_t tmp_str_len;
-
-	tmp_str = json_object_to_json_string(jobj);
-	tmp_str_len = strlen(tmp_str);
-
-	response = malloc(strlen(tmp_str)+2);
-	if (response == NULL) {
-		perror("malloc");
-		return NULL;
-	}
-
-	strcpy(response, tmp_str);
-	response[tmp_str_len+0] = '\n';
-	response[tmp_str_len+1] = '\0';
-
-	return response;
-}
-
 /* Steps performed while processing a JSON request:
  * - Convert the received message into a JSON object
  * - Extract the request name
@@ -101,9 +73,10 @@ static char* japi_get_response_as_str(json_object *jobj)
  * - Prepare the JSON response
  * - Free memory
  */
-static int japi_process_request(japi_context *ctx, const char *request, char **response)
+static int japi_process_message(japi_context *ctx, const char *request, char **response, int socket)
 {
 	const char* req_name;
+	const char* pushsrv_name;
 	json_object *jreq;
 	json_object *jresp;
 	japi_req_handler req_handler;
@@ -111,6 +84,7 @@ static int japi_process_request(japi_context *ctx, const char *request, char **r
 
 	ret = -1;
 	*response = NULL;
+	jresp = json_object_new_object(); /* Response object */
 
 	/* Create JSON object from received message */
 	jreq = json_tokener_parse(request);
@@ -119,37 +93,42 @@ static int japi_process_request(japi_context *ctx, const char *request, char **r
 		return -1;
 	}
 
-	/* Get request name */
-	req_name = japi_get_value_as_str(jreq, "japi_request");
-	if (req_name == NULL) {
-		fprintf(stderr, "ERROR: japi_request keyword not found!\n");
-		goto out_free;
-	}
-
-	/* Try to find a suitable handler for the given request */
-	req_handler = japi_get_request_handler(ctx, req_name);
-	if (req_handler == NULL) {
-
-		/* No request handler found? Check if a fallback handler was registered. */
-		req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
-
+	/* Look for subscribe/unsubscribe service and add/remove client socket if found */
+	if ((pushsrv_name = japi_get_value_as_str(jreq, "japi_pushsrv_subscribe")) != NULL) {
+		japi_pushsrv_subscribe(ctx,socket,pushsrv_name,jresp);
+	} else if ((pushsrv_name = japi_get_value_as_str(jreq, "japi_pushsrv_unsubscribe")) != NULL) {
+		japi_pushsrv_unsubscribe(ctx,socket,pushsrv_name,jresp);
+	} else if ((req_name = japi_get_value_as_str(jreq, "japi_request")) != NULL) {
+		/* Try to find a suitable handler for the given request */
+		req_handler = japi_get_request_handler(ctx, req_name);
 		if (req_handler == NULL) {
-			fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
+
+			/* No request handler found? Check if a fallback handler was registered. */
+			req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
+
+			if (req_handler == NULL) {
+				fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
+				goto out_free;
+			} else {
+				fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
+			}
+		}
+
+		/* Prepare response */
+		json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
+
+		/* Call request handler */
+		req_handler(ctx, jreq, jresp);
+	} else {
+		/* Get request name */
+		if (req_name == NULL) {
+			fprintf(stderr, "ERROR: No keyword found!\n");
 			goto out_free;
-		} else {
-			fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
 		}
 	}
 
-	/* Prepare response */
-	jresp = json_object_new_object();
-        json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
-
-	/* Call request handler */
-	req_handler(ctx, jreq, jresp);
-
 	/* Stringify response */
-	*response = japi_get_response_as_str(jresp);
+	*response = japi_get_jobj_as_ndstr(jresp);
 	json_object_put(jresp);
 
 	ret = 0;
@@ -159,23 +138,6 @@ out_free:
 	json_object_put(jreq);
 
 	return ret;
-}
-
-japi_context* japi_init(void *userptr)
-{
-	japi_context *ctx;
-
-	ctx = malloc(sizeof(japi_context));
-	if (ctx == NULL) {
-		perror("malloc() failed");
-		return NULL;
-	}
-
-	ctx->userptr = userptr;
-	ctx->socket = -1;
-	ctx->requests = NULL;
-
-	return ctx;
 }
 
 void japi_destroy(japi_context *ctx)
@@ -214,6 +176,27 @@ int japi_register_request(japi_context* ctx, const char *req_name, japi_req_hand
 	return 0;
 }
 
+japi_context* japi_init(void *userptr)
+{
+	japi_context *ctx;
+
+	ctx = malloc(sizeof(japi_context));
+	if (ctx == NULL) {
+		perror("malloc() failed");
+		return NULL;
+	}
+
+	ctx->userptr = userptr;
+	ctx->socket = -1;
+	ctx->requests = NULL;
+	ctx->push_services = NULL;
+
+	/* Register list_push_service function  */
+	japi_register_request(ctx, "japi_pushsrv_list", &japi_pushsrv_list);
+
+	return ctx;
+}
+
 int japi_start_server(japi_context *ctx, const char *port)
 {
 	int client_socket;
@@ -250,7 +233,6 @@ int japi_start_server(japi_context *ctx, const char *port)
 		while (1) {
 
 			FD_ZERO(&fdrd);
-
 			FD_SET(client_socket, &fdrd);
 			FD_SET(server_socket, &fdrd);
 
@@ -275,11 +257,10 @@ int japi_start_server(japi_context *ctx, const char *port)
 					response = NULL;
 
 					/* Received a line, process it... */
-					japi_process_request(ctx, request, &response);
+					japi_process_message(ctx, request, &response, client_socket);
 
 					/* Send response (if provided) */
 					if (response != NULL) {
-
 						ret = write_n(client_socket, response, strlen(response));
 						free(response);
 
@@ -321,9 +302,8 @@ int japi_start_server(japi_context *ctx, const char *port)
 
 		}
 	}
-
+	japi_pushsrv_shutdown_all(ctx);
 	close(server_socket);
 
 	return 0;
 }
-
