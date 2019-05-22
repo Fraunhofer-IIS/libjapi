@@ -3,7 +3,9 @@
 * Added support to register a custom "command not found" handler
 * JSON keyword 'JAPI_COMMAND' was renamed to 'japi_request'
 * All JAPI-related commands and responses are now written in small letters
-* Each request produces a response with the name of the original request
+* Each JSON request is now answered with a JSON response
+* Added support for push services
+* Added unittests based on gtest
 
 0.1.0
 =====
