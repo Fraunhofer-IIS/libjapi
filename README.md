@@ -16,7 +16,6 @@ How to make use of libjapi:
 
 * Improve README.md
 * Review code
-* Export japi_get_value_as_str() helper function 
 * Provide default request_not_found_handler
 * Switch to CMake
 
