@@ -1,6 +1,9 @@
-Next
+0.2.0-pre
 =====
 * Added support to register a custom "command not found" handler
+* JSON keyword 'JAPI_COMMAND' was renamed to 'japi_request'
+* All JAPI-related commands and responses are now written in small letters
+* Each request produces a response with the name of the original request
 
 0.1.0
 =====
