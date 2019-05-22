@@ -1,3 +1,7 @@
 doc/
 lib/
 obj/
+
+# testing
+testobj/
+testsuite
