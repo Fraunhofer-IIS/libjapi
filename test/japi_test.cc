@@ -4,6 +4,7 @@
 extern "C"{
 #include <japi.h>
 #include <japi_intern.h>
+#include <japi_pushsrv_intern.h>
 #include <japi_pushsrv.h>
 #include <japi_utils.h>
 #include <rw_n.h>
@@ -75,7 +76,7 @@ TEST(JAPI,Register)
 	EXPECT_EQ(japi_register_request(ctx,"req_name",NULL),-3);
 
 	/* Registering the same request name again or an empty request name, should not be possible */
-	EXPECT_EQ(japi_register_request(ctx,"req_name",&dummy_request_handler),-5);
+	EXPECT_EQ(japi_register_request(ctx,"req_name",&dummy_request_handler),-4);
 	EXPECT_EQ(japi_register_request(ctx,"dummy_request_02",&dummy_request_handler),0); // same handler for another name
 	EXPECT_EQ(japi_register_request(ctx,"",&dummy_request_handler),-2);
 
@@ -119,7 +120,7 @@ TEST(JAPI_Push_Service,SubscribeAndUnsubscribe)
 	japi_pushsrv_unsubscribe(ctx,socket,pushsrv_name,jresp);
 	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
 
-	/* Try to unsubscribe without subcribed before, should fail */
+	/* Try to unsubscribe without subscribed before, should fail */
 	japi_pushsrv_register(ctx,"test_pushsrv");
 	japi_pushsrv_unsubscribe(ctx,socket,pushsrv_name,jresp);
 	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
@@ -173,4 +174,102 @@ TEST(JAPI_Push_Service,List)
 	/* Clean up */
 	japi_destroy(ctx);
 	json_object_put(jobj);
+}
+
+TEST(JAPI,AddRemoveClient)
+{
+	japi_context *ctx;
+	japi_client *client;
+	int counter;
+
+	ctx = japi_init(NULL);
+	/* Add some clients */
+	EXPECT_EQ(japi_add_client(ctx,4),0);
+	EXPECT_EQ(japi_add_client(ctx,5),0);
+	EXPECT_EQ(japi_add_client(ctx,6),0);
+	EXPECT_EQ(japi_add_client(ctx,7),0);
+
+	/* Add the same client again */
+	EXPECT_EQ(japi_add_client(ctx,5),0);
+	EXPECT_EQ(japi_add_client(ctx,5),0);
+
+	counter = 0;
+	client = ctx->clients;
+	while (client != NULL) {
+		counter++;
+		client = client->next;
+	}
+	/* Counter should count 6 added clients */
+	EXPECT_EQ(counter,6);
+
+	/* Remove some clients */
+	EXPECT_EQ(japi_remove_client(ctx,4),0);
+	EXPECT_EQ(japi_remove_client(ctx,5),0);
+
+	counter = 0;
+	client = ctx->clients;
+	while (client != NULL) {
+		counter++;
+		client = client->next;
+	}
+	/* Counter should count 2 less clients */
+	EXPECT_EQ(counter,4);
+
+	/* Remove not existent client */
+	EXPECT_EQ(japi_remove_client(ctx,12),-1);
+	EXPECT_EQ(japi_remove_client(ctx,13),-1);
+}
+
+TEST(JAPI_Push_Service,AddRemoveClient)
+{
+	japi_context *ctx;
+	japi_pushsrv_context *psc;
+	japi_client *client;
+	json_object *jobj;
+	int counter;
+
+	jobj = json_object_new_object();
+	ctx = japi_init(NULL);
+
+	/* Register some push services */
+	japi_pushsrv_register(ctx,"pushsrv_status");
+	japi_pushsrv_register(ctx,"pushsrv_temperature");
+
+	/* Add some clients */
+	japi_pushsrv_subscribe(ctx,4,"pushsrv_temperature",jobj);
+	japi_pushsrv_subscribe(ctx,5,"pushsrv_temperature",jobj);
+	japi_pushsrv_subscribe(ctx,6,"pushsrv_temperature",jobj);
+	/* Add a clients a second time */
+	japi_pushsrv_subscribe(ctx,7,"pushsrv_temperature",jobj);
+	japi_pushsrv_subscribe(ctx,7,"pushsrv_temperature",jobj);
+
+	japi_pushsrv_subscribe(ctx,5,"pushsrv_status",jobj);
+
+	counter = 0;
+	psc = ctx->push_services;
+	client = psc->clients;
+	while (client != NULL) {
+		counter++;
+		client = client->next;
+	}
+	/* Counter should count 5 clients for get_temperature */
+	EXPECT_EQ(counter,5);
+
+	/* Unsubscribe some clients */
+	japi_pushsrv_unsubscribe(ctx,5,"pushsrv_temperature",jobj);
+	japi_pushsrv_unsubscribe(ctx,6,"pushsrv_temperature",jobj);
+
+	counter = 0;
+	psc = ctx->push_services;
+	client = psc->clients;
+	while (client != NULL) {
+		counter++;
+		client = client->next;
+	}
+	/* Two less clients should be counted for get_temperature */
+	EXPECT_EQ(counter,3);
+
+	/* Unsubscribe client that is not subscribed */
+	japi_pushsrv_unsubscribe(ctx,15,"pushsrv_temperature",jobj);
+	EXPECT_FALSE(japi_get_value_as_bool(jobj,"success"));
 }

@@ -26,12 +26,23 @@
  * A JAPI context struct stores several internal information.
  */
 typedef struct __japi_context {
-	int socket; /*!< File descriptor to reach the client */
 	void *userptr; /*!< Pointer to user data */
 	creadline_buf_t crl_buffer; /*!< Buffer used by creadline_r() */
+	pthread_mutex_t lock; /*!< Mutual access lock */
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
 	struct __japi_pushsrv_context *push_services; /*!< Pointer to the JAPI push service list */
+	struct __japi_client *clients; /*!< Pointer to the JAPI client context */
 } japi_context;
+
+/*!
+ * \brief JAPI client context.
+ *
+ * Stores information for client connection
+ */
+typedef struct __japi_client {
+	int socket; /*!< Socket to connect */
+	struct __japi_client* next; /*!< Pointer to the next client struct or NULL */
+} japi_client;
 
 /*!
  * \brief JAPI request handler type.
@@ -67,8 +78,10 @@ japi_context* japi_init(void *userptr);
  * Destroy the JAPI context pointed to by ctx and release allocated memory.
  *
  * \param ctx	JAPI context
+ *
+ * \returns On succes, zero is returned. On error, -1 is returned.
  */
-void japi_destroy(japi_context *ctx);
+int japi_destroy(japi_context *ctx);
 
 /*!
  * \brief Register a JAPI request handler
@@ -80,11 +93,11 @@ void japi_destroy(japi_context *ctx);
  * \param req_name	Request name
  * \param req_handler	Function pointer
  *
- * \returns	On success, zero is returned. On error, -1 for empty context,
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context,
  * -2 for empty request name,
  * -3 for empty request handler,
- * -4 for failed memory allocation,
- * -5 for duplicate naming, is returned.
+ * -4 for duplicate naming,
+ * -5 for failed memory allocation, is returned.
  */
 int japi_register_request(japi_context *ctx, const char *req_name, japi_req_handler req_handler);
 

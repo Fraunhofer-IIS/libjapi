@@ -54,4 +54,3 @@ int write_n(int fd, const void* buf, size_t count)
 
 	return count;
 }
-

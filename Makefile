@@ -5,8 +5,8 @@ LIB_NAME = libjapi
 TEST_TARGET = testsuite
 
 # FLAGS
-CFLAGS := -Wall -O2 -I include -fPIC
-CXXFLAGS := -std=c++11 -Wall -O2 -I include -I src
+CFLAGS := -Wall -g -O2 -I include -fPIC -D NDEBUG
+CXXFLAGS := -std=c++11 -Wall -O2 -I include -D NDEBUG -I src
 GTEST_FLAGS = -I $(GTEST_DIR)/include
 TEST_LDFLAGS = $(GTEST_DIR)/make/libgtest_main.a lib/libjapi.a -ljson-c -lpthread
 
