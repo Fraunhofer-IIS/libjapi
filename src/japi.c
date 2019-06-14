@@ -65,7 +65,6 @@ static japi_req_handler japi_get_request_handler(japi_context *ctx, const char *
 int japi_process_message(japi_context *ctx, const char *request, char **response, int socket)
 {
 	const char* req_name;
-	const char* pushsrv_name;
 	json_object *jreq;
 	json_object *jresp;
 	japi_req_handler req_handler;
@@ -87,32 +86,37 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 		return -1;
 	}
 
-	/* Look for subscribe/unsubscribe service and add/remove client socket if found */
-	if ((pushsrv_name = japi_get_value_as_str(jreq, "japi_pushsrv_subscribe")) != NULL) {
-		japi_pushsrv_subscribe(ctx,socket,pushsrv_name,jresp);
-	} else if ((pushsrv_name = japi_get_value_as_str(jreq, "japi_pushsrv_unsubscribe")) != NULL) {
-		japi_pushsrv_unsubscribe(ctx,socket,pushsrv_name,jresp);
-	} else if ((req_name = japi_get_value_as_str(jreq, "japi_request")) != NULL) {
-		/* Try to find a suitable handler for the given request */
-		req_handler = japi_get_request_handler(ctx, req_name);
-		if (req_handler == NULL) {
-
-			/* No request handler found? Check if a fallback handler was registered. */
-			req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
-
-			if (req_handler == NULL) {
-				fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
-				goto out_free;
-			} else {
-				fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
-			}
-		}
+	if ((req_name = japi_get_value_as_str(jreq, "japi_request")) != NULL) {
 
 		/* Prepare response */
 		json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
 
-		/* Call request handler */
-		req_handler(ctx, jreq, jresp);
+		/* Look for subscribe/unsubscribe service and add/remove client socket if found */
+		if (strcasecmp(req_name,"japi_pushsrv_subscribe") == 0) {
+			japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
+		} else if (strcasecmp(req_name,"japi_pushsrv_unsubscribe") == 0) {
+			japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
+		} else {
+
+			/* Try to find a suitable handler for the given request */
+			req_handler = japi_get_request_handler(ctx, req_name);
+			if (req_handler == NULL) {
+
+				/* No request handler found? Check if a fallback handler was registered. */
+				req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
+
+				if (req_handler == NULL) {
+					fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
+					goto out_free;
+				} else {
+					fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
+				}
+			}
+
+			/* Call request handler */
+			req_handler(ctx, jreq, jresp);
+		}
+
 	} else {
 		/* Get request name */
 		if (req_name == NULL) {
