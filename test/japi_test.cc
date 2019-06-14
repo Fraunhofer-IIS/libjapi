@@ -106,30 +106,56 @@ TEST(JAPI_Push_Service,SubscribeAndUnsubscribe)
 	int socket;
 	char* pushsrv_name;
 	japi_context *ctx;
+	json_object *jreq;
 	json_object *jresp;
+	json_object *illegal_req;
+	json_object *bad_req;
 
 	socket = 4;
 	pushsrv_name = (char*)"test_pushsrv";
+	jreq = json_object_new_object();
 	jresp = json_object_new_object();
+	illegal_req = json_object_new_object();
+	bad_req = json_object_new_object();
 	ctx = japi_init(NULL);
 
+	/* Build JSON request */
+	json_object_object_add(jreq,"service",json_object_new_string(pushsrv_name));
+
 	/* Sub-/unsubscribe before registering, expecting false */
-	japi_pushsrv_subscribe(ctx,socket,pushsrv_name,jresp);
+	japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
 	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
 
-	japi_pushsrv_unsubscribe(ctx,socket,pushsrv_name,jresp);
+	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
+	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+
+	/* Pass illegal JSON request, expecting false */
+	json_object_object_add(illegal_req,"service",NULL);
+
+	japi_pushsrv_subscribe(ctx,socket,illegal_req,jresp);
+	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+
+	japi_pushsrv_unsubscribe(ctx,socket,illegal_req,jresp);
+	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+
+	json_object_object_add(bad_req,"bad_key",json_object_new_string(pushsrv_name));
+
+	japi_pushsrv_subscribe(ctx,socket,bad_req,jresp);
+	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+
+	japi_pushsrv_unsubscribe(ctx,socket,bad_req,jresp);
 	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
 
 	/* Try to unsubscribe without subscribed before, should fail */
 	japi_pushsrv_register(ctx,"test_pushsrv");
-	japi_pushsrv_unsubscribe(ctx,socket,pushsrv_name,jresp);
+	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
 	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
 
 	/* Expect true */
-	japi_pushsrv_subscribe(ctx,socket,pushsrv_name,jresp);
+	japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
 	EXPECT_TRUE(japi_get_value_as_bool(jresp, "success"));
 
-	japi_pushsrv_unsubscribe(ctx,socket,pushsrv_name,jresp);
+	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
 	EXPECT_TRUE(japi_get_value_as_bool(jresp, "success"));
 
 	/* Clean up */
@@ -226,24 +252,32 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	japi_pushsrv_context *psc;
 	japi_client *client;
 	json_object *jobj;
+	json_object *push_status_jreq;
+	json_object *push_temperature_jreq;
 	int counter;
 
+	push_status_jreq = json_object_new_object();
+	push_temperature_jreq = json_object_new_object();
 	jobj = json_object_new_object();
 	ctx = japi_init(NULL);
+
+	/* Build JSON request */
+	json_object_object_add(push_status_jreq,"service",json_object_new_string("pushsrv_status"));
+	json_object_object_add(push_temperature_jreq,"service",json_object_new_string("pushsrv_temperature"));
 
 	/* Register some push services */
 	japi_pushsrv_register(ctx,"pushsrv_status");
 	japi_pushsrv_register(ctx,"pushsrv_temperature");
 
 	/* Add some clients */
-	japi_pushsrv_subscribe(ctx,4,"pushsrv_temperature",jobj);
-	japi_pushsrv_subscribe(ctx,5,"pushsrv_temperature",jobj);
-	japi_pushsrv_subscribe(ctx,6,"pushsrv_temperature",jobj);
+	japi_pushsrv_subscribe(ctx,4,push_temperature_jreq,jobj);
+	japi_pushsrv_subscribe(ctx,5,push_temperature_jreq,jobj);
+	japi_pushsrv_subscribe(ctx,6,push_temperature_jreq,jobj);
 	/* Add a clients a second time */
-	japi_pushsrv_subscribe(ctx,7,"pushsrv_temperature",jobj);
-	japi_pushsrv_subscribe(ctx,7,"pushsrv_temperature",jobj);
+	japi_pushsrv_subscribe(ctx,7,push_temperature_jreq,jobj);
+	japi_pushsrv_subscribe(ctx,7,push_temperature_jreq,jobj);
 
-	japi_pushsrv_subscribe(ctx,5,"pushsrv_status",jobj);
+	japi_pushsrv_subscribe(ctx,5,push_status_jreq,jobj);
 
 	counter = 0;
 	psc = ctx->push_services;
@@ -256,8 +290,8 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	EXPECT_EQ(counter,5);
 
 	/* Unsubscribe some clients */
-	japi_pushsrv_unsubscribe(ctx,5,"pushsrv_temperature",jobj);
-	japi_pushsrv_unsubscribe(ctx,6,"pushsrv_temperature",jobj);
+	japi_pushsrv_unsubscribe(ctx,5,push_temperature_jreq,jobj);
+	japi_pushsrv_unsubscribe(ctx,6,push_temperature_jreq,jobj);
 
 	counter = 0;
 	psc = ctx->push_services;
@@ -270,6 +304,6 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	EXPECT_EQ(counter,3);
 
 	/* Unsubscribe client that is not subscribed */
-	japi_pushsrv_unsubscribe(ctx,15,"pushsrv_temperature",jobj);
+	japi_pushsrv_unsubscribe(ctx,15,push_temperature_jreq,jobj);
 	EXPECT_FALSE(japi_get_value_as_bool(jobj,"success"));
 }

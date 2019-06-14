@@ -137,19 +137,27 @@ void japi_pushsrv_remove_client_from_all_pushsrv(japi_context *ctx, int socket)
 /*
  * Saves client socket, if passed push service is registered
  */
-void japi_pushsrv_subscribe(japi_context *ctx, int socket, const char* pushsrv_name, json_object *jobj)
+void japi_pushsrv_subscribe(japi_context *ctx, int socket, json_object *jreq, json_object *jresp)
 {
 	japi_pushsrv_context *psc;
+	json_object *jval;
+	const char* pushsrv_name;
 
 	/* Error handling */
 	assert(ctx != NULL);
 	assert(socket != -1);
-	assert(pushsrv_name != NULL);
-	assert(jobj != NULL);
+	assert(jreq != NULL);
+	assert(jresp != NULL);
 
 	psc = ctx->push_services;
 
-	prntdbg("subscribe started for pushsrv: %s for client %d\n",pushsrv_name, socket);
+	/* Get the push service name */
+	if (!json_object_object_get_ex(jreq,"service",&jval) || jval == NULL) {
+		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
+		return;
+	}
+	pushsrv_name = json_object_get_string(jval);
 
 	/* Search for push service in list and save socket, if found */
 	while (psc != NULL) {
@@ -160,35 +168,43 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, const char* pushsrv_n
 		psc = psc->next;
 	}
 
+	json_object_object_add(jresp,"service",json_object_new_string(pushsrv_name));
+
 	/* Create JSON response object */
 	if (psc != NULL) {
-		json_object_object_add(jobj,"japi_pushsrv_response",json_object_new_string(pushsrv_name));
-		json_object_object_add(jobj,"success",json_object_new_boolean(TRUE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(TRUE));
 	} else {
-		json_object_object_add(jobj,"japi_pushsrv_response",json_object_new_string(pushsrv_name));
-		json_object_object_add(jobj,"success",json_object_new_boolean(FALSE));
-		json_object_object_add(jobj,"message",json_object_new_string("Push service not found."));
+		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
 	}
 }
 
 /*
  * Removes client socket, if passed push service is registered
  */
-void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, const char* pushsrv_name, json_object *jobj)
+void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, json_object *jreq, json_object *jresp)
 {
 	japi_pushsrv_context *psc;
+	json_object* jval;
+	const char* pushsrv_name;
 
 	/* Error handling */
 	assert(ctx != NULL);
 	assert(socket != -1);
-	assert(pushsrv_name != NULL);
-	assert(jobj != NULL);
+	assert(jreq != NULL);
+	assert(jresp != NULL);
 
 	psc = ctx->push_services;
 	bool registered = false; /* Service registered? */
 	bool unsubscribed = false; /* Service unsubscribed? */
 
-	prntdbg("unsubscribe started for pushsrv: %s for client %d\n",pushsrv_name, socket);
+	/* Get the push service name */
+	if (!json_object_object_get_ex(jreq,"service",&jval) || jval == NULL) {
+		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
+		return;
+	}
+	pushsrv_name = json_object_get_string(jval);
 
 	/* Search for push service in list and remove socket, if found & socket is registered */
 	while (psc != NULL) {
@@ -202,18 +218,17 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, const char* pushsrv
 		psc = psc->next;
 	}
 
+	json_object_object_add(jresp,"service",json_object_new_string(pushsrv_name));
+
 	/* Create JSON response object */
 	if (registered && unsubscribed) { /* Subscribed */
-		json_object_object_add(jobj,"japi_pushsrv_response",json_object_new_string(pushsrv_name));
-		json_object_object_add(jobj,"success",json_object_new_boolean(TRUE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(TRUE));
 	} else if (registered && !unsubscribed) { /* Registered, but not subscribed */
-		json_object_object_add(jobj,"japi_pushsrv_response",json_object_new_string(pushsrv_name));
-		json_object_object_add(jobj,"success",json_object_new_boolean(FALSE));
-		json_object_object_add(jobj,"message",json_object_new_string("Can't unsubscribe a service that wasn't subscribed before."));
+		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"message",json_object_new_string("Can't unsubscribe a service that wasn't subscribed before."));
 	} else { /* Not registered */
-		json_object_object_add(jobj,"japi_pushsrv_response",json_object_new_string(pushsrv_name));
-		json_object_object_add(jobj,"success",json_object_new_boolean(FALSE));
-		json_object_object_add(jobj,"message",json_object_new_string("Push service not found."));
+		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
 	}
 }
 
@@ -345,14 +360,11 @@ void japi_pushsrv_list(japi_context *ctx, json_object *request, json_object *res
 	}
 
 	/* Add array to JSON-object */
-	json_object_object_add(response, "japi_pushsrv_response", jarray);
+	json_object_object_add(response, "services", jarray);
 }
 
 /*
  * Send message to all subscribed clients of a push service
- * TODO:
- * Each pushsrv message shall include the pushsrv name.
- * "japi_pushsrv" : "xyz"
  */
 int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg)
 {
@@ -374,6 +386,8 @@ int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg)
 
 	ret = 0;
 	success = 0;
+
+	json_object_object_add(jmsg,"japi_pushsrv",json_object_new_string(psc->pushsrv_name));
 	msg = japi_get_jobj_as_ndstr(jmsg);
 
 	pthread_mutex_lock(&(psc->lock));
