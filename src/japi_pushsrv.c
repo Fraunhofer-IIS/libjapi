@@ -314,13 +314,16 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context* ctx, const char* pushs
 }
 
 /*
- * Iterate through push service and unsubscribe & free memory for all elements
+ * Iterate through push service and unsubscribe & free memory for all clients
  */
-void japi_pushsrv_destroy(japi_pushsrv_context *psc)
+int japi_pushsrv_destroy(japi_pushsrv_context *psc)
 {
 	japi_client *client, *client_next;
 
-	assert(psc != NULL);
+	if (psc == NULL) {
+		fprintf(stderr,"ERROR: push service context is NULL");
+		return -1;
+	}
 
 	client = psc->clients;
 
@@ -335,6 +338,8 @@ void japi_pushsrv_destroy(japi_pushsrv_context *psc)
 
 	japi_pushsrv_stop(psc);
 	free_pushsrv(psc);
+
+	return 0;
 }
 
 /*
