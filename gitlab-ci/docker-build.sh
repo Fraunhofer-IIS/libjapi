@@ -11,9 +11,6 @@ echo "Setting up docker build context in $BUILDDIR ..."
 
 cd $BUILDDIR
 
-# clone build infrastructure repositories
-git clone --recurse-submodules -b testing --single-branch git@git01.iis.fhg.de:ks-ip-lib/software/libjapi.git
-
 docker build -t libjapi:latest .
 
 # clean up

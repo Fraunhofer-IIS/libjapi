@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# see https://git01.iis.fhg.de/fobp/fobp-software/container_registry
+# see https://git01.iis.fhg.de/ks-ip-lib/software/libjapi/container_registry
 
 set -e # terminate on any error
 
