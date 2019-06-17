@@ -153,7 +153,7 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, json_object *jreq, js
 
 	/* Get the push service name */
 	if (!json_object_object_get_ex(jreq,"service",&jval) || jval == NULL) {
-		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(false));
 		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
 		return;
 	}
@@ -172,9 +172,9 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, json_object *jreq, js
 
 	/* Create JSON response object */
 	if (psc != NULL) {
-		json_object_object_add(jresp,"success",json_object_new_boolean(TRUE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(true));
 	} else {
-		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(false));
 		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
 	}
 }
@@ -200,7 +200,7 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, json_object *jreq, 
 
 	/* Get the push service name */
 	if (!json_object_object_get_ex(jreq,"service",&jval) || jval == NULL) {
-		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(false));
 		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
 		return;
 	}
@@ -222,12 +222,12 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, json_object *jreq, 
 
 	/* Create JSON response object */
 	if (registered && unsubscribed) { /* Subscribed */
-		json_object_object_add(jresp,"success",json_object_new_boolean(TRUE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(true));
 	} else if (registered && !unsubscribed) { /* Registered, but not subscribed */
-		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(false));
 		json_object_object_add(jresp,"message",json_object_new_string("Can't unsubscribe a service that wasn't subscribed before."));
 	} else { /* Not registered */
-		json_object_object_add(jresp,"success",json_object_new_boolean(FALSE));
+		json_object_object_add(jresp,"success",json_object_new_boolean(false));
 		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
 	}
 }
@@ -238,12 +238,12 @@ static bool pushsrv_isredundant(japi_context *ctx, const char *pushsrv_name)
 	japi_pushsrv_context *psc;
 	bool duplicate;
 
-	duplicate = FALSE;
+	duplicate = false;
 	psc = ctx->push_services;
 
 	while (psc != NULL) {
 		if (strcmp(psc->pushsrv_name, pushsrv_name) == 0) {
-			duplicate = TRUE;
+			duplicate = true;
 			break;
 		}
 		psc = psc->next;
