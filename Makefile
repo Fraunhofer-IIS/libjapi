@@ -44,7 +44,7 @@ gtest:
 	cd $(GTEST_DIR)/make && make
 
 run_test: build_test
-	./testsuite
+	./$(TEST_TARGET)
 
 test: run_test
 

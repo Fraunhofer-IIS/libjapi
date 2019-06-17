@@ -63,8 +63,10 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context *ctx, const char *pushs
  * Iterates through push service clients and unsubscribes and frees memory.
  *
  * \param psc	JAPI push service context
+ *
+ * \returns On success, 1 is returned.
  */
-void japi_pushsrv_destroy(japi_pushsrv_context *psc);
+int japi_pushsrv_destroy(japi_pushsrv_context *psc);
 
 /*!
  * \brief Send messages to all subscribed clients
