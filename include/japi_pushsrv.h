@@ -64,7 +64,7 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context *ctx, const char *pushs
  *
  * \param psc	JAPI push service context
  *
- * \returns On success, 1 is returned.
+ * \returns On success, 0 is returned. On error, -1 is returned.
  */
 int japi_pushsrv_destroy(japi_pushsrv_context *psc);
 

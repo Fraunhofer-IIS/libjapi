@@ -321,6 +321,9 @@ TEST(JAPI_Push_Service,PushServiceDestroy)
 	psc_status = japi_pushsrv_register(ctx,"pushsrv_temperature");
 
 	/* Destroy push services */
-	EXPECT_TRUE(japi_pushsrv_destroy(psc_status));
-	EXPECT_TRUE(japi_pushsrv_destroy(psc_temperature));
+	EXPECT_EQ(japi_pushsrv_destroy(psc_status),0);
+	EXPECT_EQ(japi_pushsrv_destroy(psc_temperature),0);
+
+	/* Pass bad push service context */
+	EXPECT_EQ(japi_pushsrv_destroy(NULL),-1);
 }
