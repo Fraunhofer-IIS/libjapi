@@ -6,6 +6,7 @@
 * Each JSON request is now answered with a JSON response
 * Added support for push services
 * Added unittests based on gtest
+* Added Multi-Client support
 
 0.1.0
 =====
