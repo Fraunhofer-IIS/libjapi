@@ -209,6 +209,7 @@ TEST(JAPI,AddRemoveClient)
 	int counter;
 
 	ctx = japi_init(NULL);
+
 	/* Add some clients */
 	EXPECT_EQ(japi_add_client(ctx,4),0);
 	EXPECT_EQ(japi_add_client(ctx,5),0);
@@ -306,4 +307,23 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	/* Unsubscribe client that is not subscribed */
 	japi_pushsrv_unsubscribe(ctx,15,push_temperature_jreq,jobj);
 	EXPECT_FALSE(japi_get_value_as_bool(jobj,"success"));
+}
+
+TEST(JAPI_Push_Service,PushServiceDestroy)
+{
+	japi_context *ctx;
+	japi_pushsrv_context *psc_status, *psc_temperature;
+
+	ctx = japi_init(NULL);
+
+	/* Register some push services */
+	psc_temperature = japi_pushsrv_register(ctx,"pushsrv_status");
+	psc_status = japi_pushsrv_register(ctx,"pushsrv_temperature");
+
+	/* Destroy push services */
+	EXPECT_EQ(japi_pushsrv_destroy(psc_status),0);
+	EXPECT_EQ(japi_pushsrv_destroy(psc_temperature),0);
+
+	/* Pass bad push service context */
+	EXPECT_EQ(japi_pushsrv_destroy(NULL),-1);
 }

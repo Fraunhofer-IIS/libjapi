@@ -1,0 +1,16 @@
+image: git01.iis.fhg.de:5005/ks-ip-lib/software/libjapi:latest
+
+stages:
+        - build
+
+job 1:
+        stage: build
+        script:
+        - "make 2>&1 | tee build.log"
+        artifacts:
+                when: always
+                expire_in: 1 week
+                paths:
+                        - build.log
+                        - "*/obj"
+                        - "*/lib/libjapi.a"
