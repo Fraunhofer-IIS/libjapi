@@ -1,0 +1,69 @@
+image: git01.iis.fhg.de:5005/ks-ip-lib/software/libjapi:latest
+
+variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+        - build
+        - build_test
+        - run_test
+        - doc
+        - publish 
+
+job 1:
+        stage: build
+        script:
+        - "make 2>&1 | tee build.log"
+        artifacts:
+                when: always
+                expire_in: 1 week
+                paths:
+                        - build.log
+                        - "obj/*"
+                        - "lib/libjapi.a"
+job 2:
+        stage: build_test
+        script:
+        - "make build_test 2>&1 | tee build_test.log"
+        artifacts:
+                when: always
+                expire_in: 1 week
+                paths:
+                        - build_test.log
+                        - "testobj/*"
+                        - "googletest/googletest/make/libgtest_main.a"
+                        - "test/*"
+                        - "testsuite"
+
+job 3:
+        stage: run_test
+        script:
+        - "make run_test 2>&1 | tee run_test.log"
+        artifacts:
+                when: always
+                expire_in: 1 week
+                paths:
+                        - run_test.log
+
+job 4:
+        stage: doc
+        script:
+        - "make doc 2>&1 | tee doc.log"
+        artifacts:
+                when: always
+                expire_in: 1 week
+                paths:
+                        - doc.log
+                        - "doc/*"
+
+pages:
+        stage: publish
+        dependencies:
+        - job 4
+        - job 1
+        script:
+        - mv doc public
+        - mv doxydir public
+        artifacts:
+                paths:
+                        - public
