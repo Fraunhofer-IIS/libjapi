@@ -26,7 +26,7 @@ $ make
 You can clone the demo project, with examples for all features from the repository listed below:
 
 ```shell
-$ git clone git@git01.iis.fhg.de:ks-ip-lib/software/libjapi-demo.git
+$ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi-demo.git
 ```
 ## Usage
 * Create a JAPI context

@@ -52,8 +52,8 @@ Register services and start server:
 #### Client request example
 \include test.py
 
-## TODO
-* Switch to CMake
+## Packages
+<a href="RPMS/rpms.html">RPMS</a>
 
 ## References
 * https://github.com/json-c/json-c
