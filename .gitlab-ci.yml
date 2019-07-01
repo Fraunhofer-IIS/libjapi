@@ -8,6 +8,7 @@ stages:
         - build_test
         - run_test
         - doc
+        - build_rpm
         - publish 
 
 job 1:
@@ -18,7 +19,6 @@ job 1:
                 when: always
                 expire_in: 1 week
                 paths:
-                        - build.log
                         - "obj/*"
                         - "lib/libjapi.a"
 job 2:
@@ -34,7 +34,6 @@ job 2:
                         - "googletest/googletest/make/libgtest_main.a"
                         - "test/*"
                         - "testsuite"
-
 job 3:
         stage: run_test
         script:
@@ -44,7 +43,6 @@ job 3:
                 expire_in: 1 week
                 paths:
                         - run_test.log
-
 job 4:
         stage: doc
         script:
@@ -55,15 +53,29 @@ job 4:
                 paths:
                         - doc.log
                         - "doc/*"
-
+job 5:
+        stage: build_rpm
+        script:
+        - "package/create_rpm.sh"
+        artifacts:
+                when: always
+                expire_in: 1 week
+                paths:
+                        - "package/rpmbuild/RPMS/x86_64/libjapi*.rpm"
 pages:
         stage: publish
         dependencies:
         - job 4
         - job 1
+        - job 5
         script:
         - mv doc public
         - mv doxydir public
+        - mkdir public/html/RPMS
+        - touch rpms.html
+        - $(echo "<p><a href=$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)</a></p>" >> rpms.html)
+        - $(echo "<p><a href=$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)</a></p>" >> rpms.html)
+        - "cp package/rpmbuild/RPMS/x86_64/libjapi*.rpm rpms.html public/html/RPMS"
         artifacts:
                 paths:
                         - public
