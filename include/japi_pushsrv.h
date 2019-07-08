@@ -19,6 +19,7 @@
 
 #include <json-c/json.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "japi.h"
 

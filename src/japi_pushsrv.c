@@ -16,7 +16,6 @@
 
 #include <assert.h>
 #include <json-c/json.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>

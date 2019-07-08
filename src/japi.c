@@ -20,7 +20,6 @@
 #include <string.h> /* strcasecmp */
 #include <sys/socket.h>
 #include <unistd.h>
-#include <pthread.h>
 
 #include "japi.h"
 
