@@ -19,6 +19,7 @@
 
 #include <json-c/json.h>
 #include <creadline.h>
+#include <pthread.h>
 
 /*!
  * \brief JAPI context struct.
