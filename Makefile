@@ -30,8 +30,8 @@ all: $(LIB_DIR)/$(LIB_NAME).so $(LIB_DIR)/$(LIB_NAME).a
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJ_DIR) $(LIB_DIR) $(TEST_OBJ_DIR) doc $(TEST_TARGET)
-	cd $(GTEST_DIR)/make && make clean
+	-rm -rf $(OBJ_DIR) $(LIB_DIR) $(TEST_OBJ_DIR) doc $(TEST_TARGET)
+	-cd $(GTEST_DIR)/make && make clean
 
 .PHONY: doc
 doc: $(SRC) $(HEADER)
