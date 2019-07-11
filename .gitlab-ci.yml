@@ -21,6 +21,7 @@ job 1:
                 paths:
                         - "obj/*"
                         - "lib/libjapi.a"
+                        - build.log
 job 2:
         stage: build_test
         script:
@@ -82,3 +83,5 @@ pages:
         artifacts:
                 paths:
                         - public
+        only:
+        - master
