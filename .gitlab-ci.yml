@@ -69,13 +69,16 @@ pages:
         - job 1
         - job 5
         script:
+        - mkdir -p public
+        - mkdir -p public/repo/x86_64
         - mv doc public
-        - mv doxydir public
-        - mkdir public/html/RPMS
-        - touch rpms.html
-        - $(echo "<p><a href=$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)</a></p>" >> rpms.html)
-        - $(echo "<p><a href=$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)</a></p>" >> rpms.html)
-        - "cp package/rpmbuild/RPMS/x86_64/libjapi*.rpm rpms.html public/html/RPMS"
+        - mv package/libjapi.repo public/repo/
+        - touch public/repo/index.html
+        - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)</a></p>" >> public/repo/index.html)
+        - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)</a></p>" >> public/repo/index.html)
+        - "cp package/rpmbuild/RPMS/x86_64/libjapi*.rpm public/repo/x86_64/"
+        - createrepo public/repo/
+        - yum-config-manager --add-repo public/repo/libjapi.repo
         artifacts:
                 paths:
                         - public
