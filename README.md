@@ -9,7 +9,7 @@ which push custom defined messages to the clients subscribed to them.
 The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html)
 
 ## Packages
-The Packages can be downloaded [here] (http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/html/RPMS/rpms.html)
+The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html)
 
 ## Features
 * Push Services
