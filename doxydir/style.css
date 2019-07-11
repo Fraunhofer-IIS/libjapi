@@ -1,0 +1,68 @@
+div#nav-tree ul.children_ul li:nth-child(1), ul.tablist li a[href="pages.html"]
+{
+	display: none;
+}
+
+.navpath ul, .tabs, .tabs2, .tabs3, .tablist a:hover, .tablist a, #nav-tree, .tablist li.current a, #nav-tree .selected 
+{
+	background-image: none;
+}
+
+.tabs .tablist a, .tabs
+{
+	background-color: lavender;
+}
+.tabs2 .tablist a, .tabs2
+{
+	background-color: #d9d9f5;
+}
+.tabs3 .tablist a, .tabs3
+{
+	background-color: #d2d2ec;
+}
+
+.tablist a:hover
+{
+	background-color: cornflowerblue;
+	border-radius: 4px;
+}
+
+div#nav-path.navpath ul
+{
+	background-color: lavender;
+}
+
+.tablist li.current a, #nav-tree .item:hover
+{
+	background-color: cornflowerblue;
+	border-radius: 4px;
+}
+
+a.el:hover, a:hover
+{
+	color: cornflowerblue;
+	text-decoration: none;
+}
+
+div#nav-tree a:hover
+{
+	color: white;
+}
+
+#nav-tree .selected a
+{
+	text-decoration: none;
+	color: dodgerblue;
+	font-weight: bold;
+	text-shadow: none;
+}
+
+#nav-tree a 
+{
+	text-decoration: none;
+}
+
+#projectname
+{
+	text-transform: uppercase;
+}

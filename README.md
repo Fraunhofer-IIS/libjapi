@@ -6,7 +6,10 @@ be returned for each request. Also it is possible to register push services,
 which push custom defined messages to the clients subscribed to them.
 
 ## Documentation
-The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/html/index.html)
+The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html)
+
+## Packages
+The Packages can be downloaded [here] (http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/html/RPMS/rpms.html)
 
 ## Features
 * Push Services

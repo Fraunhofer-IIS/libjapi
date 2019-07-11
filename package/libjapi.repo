@@ -1,0 +1,4 @@
+[libjapi]
+name=JSON API library
+type=rpm-md
+enabled=1
