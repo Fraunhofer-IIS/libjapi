@@ -14,6 +14,11 @@
  * All rights reserved.
  */
 
+/* For the POSIX standards */
+/* They are not included in the C-standard */
+/* For addrinfo struct */
+#define _POSIX_C_SOURCE 200112L
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>

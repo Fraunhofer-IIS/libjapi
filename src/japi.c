@@ -17,8 +17,10 @@
 #include <assert.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h> /* strcasecmp */
+#include <strings.h> /* strcasecmp */
+#include <string.h> /* strcmp */
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <unistd.h>
 
 #include "japi.h"

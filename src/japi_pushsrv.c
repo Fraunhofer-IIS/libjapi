@@ -14,10 +14,16 @@
  * All rights reserved.
  */
 
+/* For the POSIX standards */
+/* They are not included in the C-standard */
+/* For strdup */
+#define _POSIX_C_SOURCE 200809L
+
 #include <assert.h>
 #include <json-c/json.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <strings.h>
 #include <string.h>
 #include <unistd.h>
 
