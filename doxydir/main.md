@@ -143,6 +143,7 @@ Push service list request:
 
 Push service list response:
 \note The service list in \a services can be empty if there is no push service registered.
+
 \code
 {
   "japi_response": "japi_pushsrv_list",
@@ -188,12 +189,14 @@ Push service unsubscribe response:
 \endcode
 
 Push service messages after successful subscribing push service:
+
 \note The push service messages just return the push service name, from which they are send.
+
 \code
 {
   "japi_pushsrv": "<push_service_name>",
   "<push-service-specific-return-key-1>": "<push-service-specific-return-value-1>",
-  "push-service-specific-return-key-n>": "<push-service-specific-return-value-n>"
+  "<push-service-specific-return-key-n>": "<push-service-specific-return-value-n>"
 }
 \endcode
 
