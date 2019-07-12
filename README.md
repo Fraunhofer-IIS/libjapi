@@ -1,15 +1,15 @@
 # libjapi
 
 libjapi is a universial JSON API library. It receives newline-delimited JSON
-(NDJSON) messages via TCP and calls registered C functions. A JSON response can
-be returned for each request. Also it is possible to register push services,
-which push custom defined messages to the clients subscribed to them.
+(NDJSON) messages via TCP and calls registered C functions. A JSON response is
+returned for each request. Furthermore, it is also possible to create push services,
+which push custom JSON messages to the clients subscribed to them.
 
 ## Documentation
-The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html)
+The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
 
 ## Packages
-The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html)
+The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
 
 ## Features
 * Push Services
@@ -169,9 +169,6 @@ int main(int argc, char *argv[])
   "service": "push_counter",
 }
 ```
-
-## TODO
-* Switch to CMake
 
 ## References
 * https://github.com/json-c/json-c
