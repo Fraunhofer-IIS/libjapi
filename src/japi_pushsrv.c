@@ -399,7 +399,7 @@ int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg)
 	client = psc->clients;
 
 	while (client != NULL) {
-		prntdbg("pushsrv '%s': Sending message to client %d\n",psc->pushsrv_name,client->socket,msg);
+		prntdbg("pushsrv '%s': Sending message to client %d\n. Message: '%s'",psc->pushsrv_name,client->socket,msg);
 		following_client = client->next; // Save pointer to next element
 
 		ret = write_n(client->socket, msg, strlen(msg));
