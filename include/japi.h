@@ -21,6 +21,10 @@
 #include <creadline.h>
 #include <pthread.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \brief JAPI context struct.
  *
@@ -113,5 +117,9 @@ int japi_register_request(japi_context *ctx, const char *req_name, japi_req_hand
  * \returns	Only returns in case of an error.
  */
 int japi_start_server(japi_context *ctx, const char *port);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __JAPI_H__ */

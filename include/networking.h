@@ -17,6 +17,10 @@
 #ifndef __NETWORKING_H__
 #define __NETWORKING_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \brief Start a new TCP server.
  *
@@ -55,6 +59,10 @@ int tcp4_start_server(const char* port);
  *          error, -1 is returned and errno ist set appropriately.
  */
 int tcp6_start_server(const char* port);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __NETWORKING_H__ */
 
