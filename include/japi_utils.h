@@ -19,6 +19,9 @@
 
 #include <json-c/json.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * \brief Get string value from json key
@@ -58,5 +61,9 @@ bool japi_get_value_as_bool(json_object *jobj, const char *key);
  * \returns On success, string is returned. On error, NULL is returned.
  */
 char* japi_get_jobj_as_ndstr(json_object *jobj);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __JAPI_UTILS_H__ */

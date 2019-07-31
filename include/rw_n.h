@@ -20,6 +20,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \brief Read a fixed number of bytes from a file descriptor.
  *
@@ -54,5 +58,9 @@ int read_n(int fd, void* buf, size_t count);
  *				error, -1 is returned, and errno is set appropriately.
  */
 int write_n(int fd, const void* buf, size_t count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __RW_N_H__ */

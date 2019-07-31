@@ -28,6 +28,10 @@
  */
 #define CREADLINE_BLOCK_SIZE 1024
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \brief Buffer type for storing remaining bytes.
  */
@@ -82,5 +86,8 @@ int creadline_r(int fd, void **dst, creadline_buf_t *buffer);
  */
 int creadline(int fd, void **dst);
 
-#endif /* __CREADLINE_H__ */
+#ifdef __cplusplus
+}
+#endif
 
+#endif /* __CREADLINE_H__ */

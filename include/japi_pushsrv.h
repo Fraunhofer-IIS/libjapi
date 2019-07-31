@@ -23,6 +23,10 @@
 
 #include "japi.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct __japi_pushsrv_context; /* Tell routine there is a struct to be defined */
 
 /*!
@@ -103,5 +107,9 @@ int japi_pushsrv_start(japi_pushsrv_context *psc, japi_pushsrv_routine routine);
  * \returns	On success, 0 is returned. On error, -1 is returned, -2 if thread is not running.
  */
 int japi_pushsrv_stop(japi_pushsrv_context *psc);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __JAPI_PUSHSRV_H__ */
