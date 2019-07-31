@@ -57,7 +57,9 @@ $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi
   target_compile_options( <TARGET> PUBLIC ${LIBJAPI_CFLAGS_OTHER})
   ```
 * json-c is linked to compile but it might be required to start the application to add /usr/local/lib to the LD_LIBRARY_PATH
-  * *export LD_LIBRARY_PATH:/usr/local/lib*
+  ```
+  export LD_LIBRARY_PATH:/usr/local/lib
+  ```
 
 ### Examples
 
