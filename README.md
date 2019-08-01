@@ -38,6 +38,32 @@ $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi
 * Start a JAPI server
 * Enjoy the flexibility
 
+## Integration in Cmake
+* add "-pthread" flag to compiler options
+  ```cmake
+  set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -pthread")
+  ```
+* Link json-c
+  ```cmake
+  pkg_search_module(JSONC REQUIRED json-c)
+  target_link_libraries( <TARGET> ${JSONC_LIBRARIES})
+  target_include_directories( <TARGET> PUBLIC ${JSONC_INCLUDE_DIRS})
+  target_compile_options( <TARGET> PUBLIC ${JSONC_CFLAGS_OTHER})
+  ```
+* Link libjapi
+  ```cmake
+  get_filename_component(LIBJAPI_LIB_DIR contrib/libjapi/lib/ ABSOLUTE)
+  FIND_LIBRARY(LIBJAPI_LIBRARIES NAMES japi PATHS ${LIBJAPI_LIB_DIR})
+  get_filename_component(LIBJAPI_INCLUDE_DIRS contrib/libjapi/include/ ABSOLUTE)
+  target_link_libraries( <TARGET> ${LIBJAPI_LIBRARIES})
+  target_include_directories( <TARGET> PUBLIC ${LIBJAPI_INCLUDE_DIRS})
+  target_compile_options( <TARGET> PUBLIC ${LIBJAPI_CFLAGS_OTHER})
+  ```
+* json-c is linked to compile but it might be required to start the application to add /usr/local/lib to the LD_LIBRARY_PATH
+  ```
+  export LD_LIBRARY_PATH:/usr/local/lib
+  ```
+
 ### Examples
 
 #### Server example
