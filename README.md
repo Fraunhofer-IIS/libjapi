@@ -40,6 +40,9 @@ $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi
 
 ## Integration in Cmake
 * add "-pthread" flag to compiler options
+  ```cmake
+  set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -pthread")
+  ```
 * Link json-c
   ```cmake
   pkg_search_module(JSONC REQUIRED json-c)
