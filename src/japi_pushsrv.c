@@ -300,6 +300,7 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context* ctx, const char* pushs
 	psc->routine = NULL;
 	psc->clients = NULL;
 	psc->enabled = false;
+	psc->userptr = ctx->userptr;
 
 	if (pthread_mutex_init(&(psc->lock),NULL) != 0) {
 		fprintf(stderr,"ERROR: mutex initialization has failed\n");
