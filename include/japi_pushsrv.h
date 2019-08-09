@@ -48,6 +48,7 @@ typedef struct __japi_pushsrv_context {
 	pthread_mutex_t lock; /*!< Mutual access lock */
 	struct __japi_client *clients; /*!< Pointer to the JAPI client context */
 	struct __japi_pushsrv_context *next; /*!< Pointer to the next push service or NULL */
+	void *userptr; /*!< Pointer to user data */
 } japi_pushsrv_context;
 
 /*!
