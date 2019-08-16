@@ -372,15 +372,17 @@ void japi_pushsrv_list(japi_context *ctx, json_object *request, json_object *res
 /*
  * Send message to all subscribed clients of a push service
  */
-int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg)
+int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg_data)
 {
 	char *msg;
 	int ret;
 	int success; /* number of successfull send messages */
 	japi_client *client, *following_client;
+	json_object *jmsg;
+	json_object *jdata;
 
 	/* Return -1 if there is no message to send */
-	if (jmsg == NULL) {
+	if (jmsg_data == NULL) {
 		fprintf(stderr,"ERROR: Nothing to send.\n");
 		return -1;
 	}
@@ -392,9 +394,15 @@ int japi_pushsrv_sendmsg(japi_pushsrv_context *psc, json_object *jmsg)
 
 	ret = 0;
 	success = 0;
+	jmsg = json_object_new_object();
+	jdata = NULL;
 
 	json_object_object_add(jmsg,"japi_pushsrv",json_object_new_string(psc->pushsrv_name));
+	jdata = json_object_get(jmsg_data); // increment refcount before calling json_object_object_add as jmesg_data may still be in use by the caller
+	json_object_object_add(jmsg,"data",jdata);
+
 	msg = japi_get_jobj_as_ndstr(jmsg);
+	json_object_put(jmsg);
 
 	pthread_mutex_lock(&(psc->lock));
 	client = psc->clients;

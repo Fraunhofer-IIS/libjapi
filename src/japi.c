@@ -68,8 +68,11 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 	const char* req_name;
 	json_object *jreq;
 	json_object *jresp;
+	json_object *jresp_data;
+	json_object *jargs;
 	japi_req_handler req_handler;
 	int ret;
+	bool args;
 
 	assert(ctx != NULL);
 	assert(request != NULL);
@@ -79,6 +82,7 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 	ret = -1;
 	*response = NULL;
 	jresp = json_object_new_object(); /* Response object */
+	jresp_data = json_object_new_object();
 
 	/* Create JSON object from received message */
 	jreq = json_tokener_parse(request);
@@ -92,11 +96,20 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 		/* Prepare response */
 		json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
 
+		/* Get arguments as an JSON object */
+		args = json_object_object_get_ex(jreq, "args", &jargs);
+
+		/* Add an empty args JSON object if no args were given */
+		if (!args) {
+			json_object_object_add(jreq,"args",NULL);
+			json_object_object_get_ex(jreq, "args", &jargs);
+		}
+
 		/* Look for subscribe/unsubscribe service and add/remove client socket if found */
 		if (strcasecmp(req_name,"japi_pushsrv_subscribe") == 0) {
-			japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
+			japi_pushsrv_subscribe(ctx,socket,jargs,jresp_data);
 		} else if (strcasecmp(req_name,"japi_pushsrv_unsubscribe") == 0) {
-			japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
+			japi_pushsrv_unsubscribe(ctx,socket,jargs,jresp_data);
 		} else {
 
 			/* Try to find a suitable handler for the given request */
@@ -115,7 +128,7 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 			}
 
 			/* Call request handler */
-			req_handler(ctx, jreq, jresp);
+			req_handler(ctx, jargs, jresp_data);
 		}
 
 	} else {
@@ -125,6 +138,9 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 			goto out_free;
 		}
 	}
+
+	/* Add response arguments */
+	json_object_object_add(jresp, "data", jresp_data);
 
 	/* Stringify response */
 	*response = japi_get_jobj_as_ndstr(jresp);
