@@ -1,4 +1,4 @@
-0.2.0-pre
+0.2.0
 =====
 * Added support to register a custom "command not found" handler
 * JSON keyword 'JAPI_COMMAND' was renamed to 'japi_request'
@@ -7,6 +7,7 @@
 * Added support for push services
 * Added unittests based on gtest
 * Added Multi-Client support
+* Introduced JSON objects args and data for user content
 
 0.1.0
 =====
