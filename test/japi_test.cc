@@ -46,9 +46,11 @@ TEST(JAPI,ProcessMessage)
 	char* response;
 	const char* request;
 	json_object *jobj;
+	json_object *jdata;
 	int socket;
 
 	jobj = json_object_new_object();
+	jdata= json_object_new_object();
 	request = "{'japi_request':'dummy_request_handler'}";
 	response = NULL;
 	ctx = japi_init(NULL);
@@ -58,7 +60,8 @@ TEST(JAPI,ProcessMessage)
 	/* On success, 0 returned. On error, -1 is returned */
 	EXPECT_EQ(japi_process_message(ctx, request, &response, socket),0);
 	jobj = json_tokener_parse(response);
-	EXPECT_STREQ("hello world",japi_get_value_as_str(jobj,"value"));
+	json_object_object_get_ex(jobj,"data",&jdata);
+	EXPECT_STREQ("hello world",japi_get_value_as_str(jdata,"value"));
 
 	/* Clean up */
 	japi_destroy(ctx);

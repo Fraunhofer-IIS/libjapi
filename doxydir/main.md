@@ -89,6 +89,15 @@ japi_start_server(ctx,8080);
 
 It will need the JAPI context and the port. If the server started, requests can be send in JSON format. For details see the next \ref formats "topic".
 
+## Pass libjapi extern arguments
+If there are arguments like e.g C-Objects or C-Structs, they can be passed with \a japi_init(). The pointer to the struct or object passed to \a japi_init() as argument will be saved in the \a japi_context struct and can be accessed trough the \a userptr.
+
+Example:
+\code
+ctx = japi_init(object_pointer);
+ctx->userptr ... #access to passed argument
+\endcode
+
 \anchor formats
 ## Communication concepts
 
@@ -112,24 +121,28 @@ JSON requests to the libjapi always start with the JSON key \a japi_request foll
 \code
 {
   "japi_request": "<request_name>",
-  "<request-specific-key-1>": "<request-specific-value-1>",
-  "<request-specific-key-n>": "<request-specific-value-n>"
+  "args": {
+  	"<request-specific-key-1>": "<request-specific-value-1>",
+	"<request-specific-key-n>": "<request-specific-value-n>"
+  }
 }
 \endcode
 
-A missing \a japi_request key in a JSON request will result in errors. The JSON keys after \a json_request are additional values the request needs for processing. It's the same for self-defined request-functions; the needed keys are defined by the functions. See \ref clientExample "here" for detailed examples.
+A missing \a japi_request key in a JSON request will result in errors. The JSON keys in \a args are additional values the request needs for processing. It's the same for self-defined request-functions; the needed keys are defined by the functions. See \ref clientExample "here" for detailed examples.
 
 ### Response format
 All requests return a response. The reponse format begins always with the JSON key \a japi_response followed by the request, that returned the response:
 \code
 {
   "japi_response": "<request_name>",
-  "<request-specific-return-key-1>": "<request-specific-return-value-1>",
-  "<request-specific-return-key-n>": "<request-specific-return-value-n>"
+  "data": {
+  	"<request-specific-return-key-1>": "<request-specific-return-value-1>",
+  	"<request-specific-return-key-n>": "<request-specific-return-value-n>"
+  }
 }
 \endcode
 
-Like the JSON request the keys and values after, are request specific. Additional information, like return values of a function.
+Like the JSON request the keys and values in \a data, are request specific; additional information, like return values of a function.
 
 ### Request and response format for push services
 It's the same for the push services, with the difference that there is an additional key \a service or \a services to identify the service to be targeted by the requests.
@@ -147,10 +160,11 @@ Push service list response:
 \code
 {
   "japi_response": "japi_pushsrv_list",
-  "services": [
-  	"push-service-name-1",
-  	"push-service-name-n"
-  ]
+  "data": {
+  	"services": [
+  		"push-service-name-1",
+  		"push-service-name-n"
+  ]}
 }
 \endcode
 
@@ -158,16 +172,20 @@ Push service subscribe request:
 \code
 {
   "japi_request": "japi_pushsrv_subscribe",
-  "service": "<push_service_name>"
+  "args": {
+  	"service": "<push_service_name>"
+  }
 }
 \endcode
 
 Push service subscribe response:
 \code
 {
-   "japi_response": "japi_pushsrv_subscribe",
-   "service": "<push_service_name>",
-   "success": {true/false}
+  "japi_response": "japi_pushsrv_subscribe",
+  "data": {
+   	"service": "<push_service_name>",
+   	"success": {true/false}
+  }
 }
 \endcode
 
@@ -175,28 +193,34 @@ Push service unsubscribe request:
 \code
 {
   "japi_request": "japi_pushsrv_unsubscribe",
-  "service": "<push_service_name>"
+  "args": {
+  	"service": "<push_service_name>"
+  }
 }
 \endcode
 
 Push service unsubscribe response:
 \code
 {
-   "japi_response": "japi_pushsrv_unsubscribe",
-   "service": "<push_service_name>",
-   "success": {true/false}
+  "japi_response": "japi_pushsrv_unsubscribe",
+  "data": {
+   	"service": "<push_service_name>",
+   	"success": {true/false}
+  }
 }
 \endcode
 
-Push service messages after successful subscribing push service:
+Push service messages after successful subscribing a push service:
 
 \note The push service messages just return the push service name, from which they are send.
 
 \code
 {
   "japi_pushsrv": "<push_service_name>",
-  "<push-service-specific-return-key-1>": "<push-service-specific-return-value-1>",
-  "<push-service-specific-return-key-n>": "<push-service-specific-return-value-n>"
+  "data": {
+  	"<push-service-specific-return-key-1>": "<push-service-specific-return-value-1>",
+  	"<push-service-specific-return-key-n>": "<push-service-specific-return-value-n>"
+  }
 }
 \endcode
 
@@ -214,12 +238,16 @@ Push service messages after successful subscribing push service:
                                              +                                                +                                                 +
    Start registered push-services            +---------------------------> push_temperature() |  {                                              |
                                              |                                     +          |   "japi_request": "get_temperature",            |
-                                             |                                     |          |   "unit": "kelvin",                             |
+                                             |                                     |          |   "args": {                                     |
+                                             |                                     |          |     "unit": "kelvin"                            |
+                                             |                                     |          |   }                                             |
                                              | <----------------------------------------------+  }                                              |
 {                                            |                                     |          |                                                 |
  "japi_response": "get_temperature",         |                                     |          |                                                 |
- "temperature": 300.0,                       |                                     |          |                                                 |
- "unit": "kelvin"                            |                                     |          |                                                 |
+ "data": {                                   |                                     |          |                                                 |
+   "temperature": 300.0,                     |                                     |          |                                                 |
+   "unit": "kelvin"                          |                                     |          |                                                 |
+  }                                          |                                     |          |                                                 |
 }                                            +----------------------------------------------> |                                                 |
                                              |                                     |          |                                                 | {
                                              |                                     |          |                                                 |  "japi_request": "japi_pushsrv_list",
@@ -227,59 +255,78 @@ Push service messages after successful subscribing push service:
                                              | <------------------------------------------------------------------------------------------------+
 {                                            |                                     |          |                                                 |
  "japi_response": "japi_pushsrv_list",       |                                     |          |                                                 |
- "services": [                               |                                     |          |                                                 |
-   "push_temperature",                       |                                     |          |                                                 |
- ]                                           |                                     |          |                                                 |
+ "data": {                                   |                                     |          |                                                 |
+   "services": [                             |                                     |          |                                                 |
+     "push_temperature",                     |                                     |          |                                                 |
+ ]}                                          |                                     |          |                                                 |
 }                                            +------------------------------------------------------------------------------------------------> |
                                              |                                     |          |                                                 |
                                              |                                     |          |                                                 |
                                              |                                     |          |  {                                              |
                                              |                                     |          |   "japi_request": "japi_pushsrv_subscribe",     |
-                                             |                                     |          |   "service": "push_temperature",                |
+                                             |                                     |          |   "args": {                                     |
+                                             |                                     |          |     "service": "push_temperature"               |
+                                             |                                     |          |   }                                             |
                                              |                                     |          |  }                                              |
 {                                            | <----------------------------------------------+                                                 |
  "japi_response": "japi_pushsrv_subscribe",  |                                     |          |                                                 |
- "service": "push_temperature",              |                                     |          |                                                 |
- "success": true                             |                                     |          |                                                 |
+ "data": {                                   |                                     |          |                                                 | 
+   "service": "push_temperature",            |                                     |          |                                                 |
+   "success": true                           |                                     |          |                                                 |
+  }                                          |                                     |          |                                                 |
 }                                            +----------------------------------------------> |                                                 |
                                              |                                     |          |                                                 |
                                              | {                                   |          |                                                 |
-                                             |  "temperature": 31.986693,          +--------> |                                                 |
+                                             |  "data": {                          |          |                                                 |
+                                             |    "temperature": 31.986693         |          |                                                 |
+                                             |  },                                 +--------> |                                                 |
                                              |  "japi_pushsrv": "push_temperature" |          |                                                 |
                                              | }                                   |          |                                                 |
                                              |                                     +--------> |                                                 |
                                              |                                     |          |                                                 |{
-                                             |                                     |          |                                                 | "japi_request": "japi_pushsrv_subscribe
-                                             |                                     +--------> |                                                 | "service": "push_temperature",
+                                             |                                     |          |                                                 | "japi_request": "japi_pushsrv_subscribe,
+                                             |                                     |          |                                                 | "args": {
+                                             |                                     +--------> |                                                 |   "service": "push_temperature"
+                                             |                                     |          |                                                 | }
                                              |                                     |          |                                                 |}
 {                                            + <-----------------------------------+----------+-------------------------------------------------+
  "japi_response": "japi_pushsrv_subscribe",  |                                     |          |                                                 |
- "service": "push_temperature",              |                                     |          |                                                 |
- "success": true                             +------------------------------------------------------------------------------------------------> |
+ "data": {                                   |                                     |          |                                                 |
+   "service": "push_temperature",            |                                     |          |                                                 |
+   "success": true                           +------------------------------------------------------------------------------------------------> |
+ }                                           |                                     |          |                                                 |
 }                                            |                                     |          |                                                 |
                                              |                                     +----------------------------------------------------------> |
-                                             |  {                                  |          |                                                 |
-                                             |   "temperature": 42.136809,         |          |                                                 |
-                                             |   "japi_pushsrv": "push_temperature"+--------> |                                                 |
-                                             |  }                                  |          |                                                 |
+                                             |{                                    |          |                                                 |
+                                             | "data": {                           |          |                                                 |
+                                             |   "temperature": 42.136809          |          |                                                 |
+                                             |  },                                 |          |                                                 |
+                                             |  "japi_pushsrv": "push_temperature" +--------> |                                                 |
+                                             | }                                   |          |                                                 |
                                              |                                     |          |                                                 |
                                              |                                     +----------------------------------------------------------> |
                                              |                                     |          |                                                 |
                                              |                                     |          | {                                               |
                                              |                                     |          |  "japi_request": "japi_pushsrv_unsubscribe",    |
-                                             |                                     |          |  "service": "push_temperature",                 |
+                                             |                                     |          |  "args": {                                      |
+                                             |                                     |          |    "service": "push_temperature"                |
+                                             |                                     |          |  }                                              |
                                              |                                     |          | }                                               |
                                              | <----------------------------------------------+                                                 |
 {                                            |                                     |          |                                                 | {
  "japi_response": "japi_pushsrv_unsubscribe",|                                     |          |                                                 |  "japi_request": "japi_pushsrv_unsubscribe",
- "service": "push_temperature",              +----------------------------------------------> |                                                 |  "service": "push_temperature",
- "success": true                             |                                     |          |                                                 | }
+ "data": {                                   |                                     |          |                                                 |  "args": {
+   "service": "push_temperature",            +----------------------------------------------> |                                                 |    "service": "push_temperature"
+   "success": true                           |                                     |          |                                                 |  }
+ }                                           |                                     |          |                                                 | }
 }                                            | <------------------------------------------------------------------------------------------------+
                                              |                                     |          |                                                 |
 {                                            |                                     |          |                                                 |
  "japi_response": "japi_pushsrv_unsubscribe",|                                     |          |                                                 |
- "service": "push_temperature",              +------------------------------------------------------------------------------------------------> |
- "success": true                             |                                     |          |                                                 |
+ "data": {                                   |                                     |          |                                                 |
+   "service": "push_temperature",            +------------------------------------------------------------------------------------------------> |
+   "success": true                           |                                     |          |                                                 |
+ }                                           |                                     |          |                                                 |
 }                                            v                                     v          v                                                 v
 
 

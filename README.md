@@ -178,7 +178,9 @@ int main(int argc, char *argv[])
 ```py
 {
   "japi_request": "get_temperature",
-  "unit": "kelvin",
+  "args": {
+	"unit": "kelvin"
+  }
 }
 
 {
@@ -187,12 +189,16 @@ int main(int argc, char *argv[])
 
 {
   "japi_request": "japi_pushsrv_subscribe",
-  "service": "push_counter",
+  "args": {
+	"service": "push_counter"
+  }
 }
 
 {
   "japi_request": "japi_pushsrv_unsubscribe",
-  "service": "push_counter",
+  "args": {
+	"service": "push_counter"
+  }
 }
 ```
 
