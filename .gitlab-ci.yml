@@ -70,9 +70,11 @@ pages:
         - job 1
         - job 5
         script:
-        - mkdir -p public
+        - mkdir -p public/$CI_COMMIT_REF_NAME
         - mkdir -p public/repo/x86_64
-        - mv doc public
+        - mv doc public/$CI_COMMIT_REF_NAME
+        - touch public/doc.html
+        - echo "<h2>Documentation</h2><br/><a href=$CI_COMMIT_REF_NAME/doc/html/index.html>"Documentation for Branch $CI_COMMIT_REF_NAME"</a>" >> public/doc.html
         - mv package/libjapi.repo public/repo/
         - touch public/repo/index.html
         - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)</a></p>" >> public/repo/index.html)
@@ -83,5 +85,3 @@ pages:
         artifacts:
                 paths:
                         - public
-        only:
-        - master

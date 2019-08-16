@@ -31,7 +31,7 @@ $ make
 \endcode
 
 #### Packages
-The packages can be found <a href="../../repo/index.html">here</a>.
+The packages can be found <a href="../../../repo/index.html">here</a>.
 
 \anchor demo
 ## Demo

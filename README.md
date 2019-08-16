@@ -6,7 +6,7 @@ returned for each request. Furthermore, it is also possible to create push servi
 which push custom JSON messages to the clients subscribed to them.
 
 ## Documentation
-The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
+The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc.html).
 
 ## Packages
 The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
