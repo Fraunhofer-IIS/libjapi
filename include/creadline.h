@@ -18,8 +18,8 @@
 #ifndef __CREADLINE_H__
 #define __CREADLINE_H__
 
-/*! Override the maximum line size here (default: 10 MiB) */
-#define CREADLINE_MAX_LINE_SIZE 10*1024*1024
+/*! Override the maximum line size here (default: 64 MiB) */
+//#define CREADLINE_MAX_LINE_SIZE 10*1024*1024
 
 /*! Define creadline's block size.
  *

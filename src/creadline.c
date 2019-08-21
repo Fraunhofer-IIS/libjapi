@@ -29,7 +29,7 @@
 #ifndef CREADLINE_MAX_LINE_SIZE
 /*! Internal definition of the maximum allowed line size. Can be overwritten by
  * defining CREADLINE_MAX_LINE_SIZE. */
-#define __MAX_LINEBUF_SIZE__ 10*1024*1024
+#define __MAX_LINEBUF_SIZE__ 64*1024*1024
 #else
 #define __MAX_LINEBUF_SIZE__ CREADLINE_MAX_LINE_SIZE
 #endif
