@@ -33,7 +33,7 @@ make doc
 install -d %{buildroot}/%{_libdir}/libjapi/
 install -d %{buildroot}/%{_docdir}/libjapi/
 install -d %{buildroot}/%{_includedir}/libjapi/
-cp -ra %{_builddir}/libjapi/lib/* %{buildroot}/%{_libdir}/
+cp -ra %{_builddir}/libjapi/lib/*.so %{buildroot}/%{_libdir}/
 cp -ra %{_builddir}/libjapi/doc/ %{buildroot}/%{_docdir}/libjapi/
 cp -ra %{_builddir}/libjapi/doxydir/ %{buildroot}/%{_docdir}/libjapi/
 cp -ra %{_builddir}/libjapi/Doxyfile %{buildroot}/%{_docdir}/libjapi/
@@ -44,7 +44,7 @@ cp -ra %{_builddir}/libjapi/include/* %{buildroot}/%{_includedir}/libjapi/
 %{_docdir}/libjapi/
 
 %files
-%{_libdir}/
+%{_libdir}/libjapi.so
 %{_includedir}/libjapi/
 
 %changelog

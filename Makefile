@@ -6,7 +6,7 @@ TEST_TARGET = testsuite
 
 # FLAGS
 CFLAGS := -std=c99 -Wall -g -O2 -I include -fPIC -D_POSIX_C_SOURCE=200809L -D NDEBUG
-CXXFLAGS := -std=c++11 -Wall -O2 -I include -D NDEBUG -I src
+CXXFLAGS := -std=c++11 -Wall -O2 -I include -I src -D NDEBUG
 GTEST_FLAGS = -I $(GTEST_DIR)/include
 TEST_LDFLAGS = $(GTEST_DIR)/make/libgtest_main.a lib/libjapi.a -ljson-c -lpthread
 
