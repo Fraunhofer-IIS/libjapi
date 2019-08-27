@@ -32,7 +32,7 @@ struct __japi_pushsrv_context; /* Tell routine there is a struct to be defined *
 /*!
  * \brief JAPI push service routine.
  */
-typedef int (*japi_pushsrv_routine)(struct __japi_pushsrv_context *psc);
+typedef void (*japi_pushsrv_routine)(struct __japi_pushsrv_context *psc);
 
 /*!
  * \brief JAPI push service context
