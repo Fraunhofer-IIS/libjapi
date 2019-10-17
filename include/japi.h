@@ -32,6 +32,8 @@ extern "C" {
  */
 typedef struct __japi_context {
 	void *userptr; /*!< Pointer to user data */
+	uint16_t num_clients; /*!< Number of connected clients */
+	uint16_t max_clients; /*!< Number of maximal allowed clients */
 	creadline_buf_t crl_buffer; /*!< Buffer used by creadline_r() */
 	pthread_mutex_t lock; /*!< Mutual access lock */
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
@@ -117,6 +119,18 @@ int japi_register_request(japi_context *ctx, const char *req_name, japi_req_hand
  * \returns	Only returns in case of an error.
  */
 int japi_start_server(japi_context *ctx, const char *port);
+
+/*!
+ * \brief Set the number of allowed clients
+ *
+ * Set the maximal number of allowed clients.
+ *
+ * \param ctx	JAPI context
+ * \param num	Number of clients to be allowed. 0 stands for unlimited.
+ *
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
+ */
+int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
 
 #ifdef __cplusplus
 }
