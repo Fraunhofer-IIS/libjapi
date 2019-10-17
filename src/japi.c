@@ -238,6 +238,8 @@ japi_context* japi_init(void *userptr)
 	ctx->requests = NULL;
 	ctx->push_services = NULL;
 	ctx->clients = NULL;
+	ctx->num_clients = 0;
+	ctx->max_clients = 0;
 
 	/* Initialize mutex */
 	if (pthread_mutex_init(&(ctx->lock),NULL) != 0) {
@@ -255,13 +257,30 @@ japi_context* japi_init(void *userptr)
 }
 
 /*
+ * Set maximal allowed number of clients.
+ * 0 is interpreted as unlimited number of allowed clients.
+ */
+int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num)
+{
+	/* Error handling */
+	if (ctx == NULL) {
+                fprintf(stderr, "ERROR: JAPI context is NULL.\n");
+                return -1;
+        }
+	
+	ctx->max_clients = num;
+
+	return 0;
+}
+
+/*
  * Add new client element to list
  */
 int japi_add_client(japi_context *ctx, int socket)
 {
 	japi_client *client;
 
-	/* Error Handling */
+	/* Error handling */
 	assert(ctx != NULL);
 	assert(socket > 0);
 
@@ -280,6 +299,8 @@ int japi_add_client(japi_context *ctx, int socket)
 	/* Link list */
 	client->next = ctx->clients;
 	ctx->clients = client;
+	/* Increment number of connected clients */
+	ctx->num_clients++;
 	pthread_mutex_unlock(&(ctx->lock));
 
 	return 0;
@@ -312,6 +333,7 @@ int japi_remove_client(japi_context *ctx, int socket)
 			prntdbg("removing client %d from japi context and close socket\n",client->socket);
 			close(client->socket);
 			free(client);
+			ctx->num_clients--;
 			ret = 0;
 			break;
 		}
@@ -321,6 +343,7 @@ int japi_remove_client(japi_context *ctx, int socket)
 			prntdbg("removing client %d from japi context and close socket\n",client->socket);
 			close(client->socket);
 			free(client);
+			ctx->num_clients--;
 			ret = 0;
 			break;
 		}
@@ -329,6 +352,7 @@ int japi_remove_client(japi_context *ctx, int socket)
 			prntdbg("removing client %d from japi context and close socket\n",client->socket);
 			close(client->socket);
 			free(client);
+			ctx->num_clients--;
 			ret = 0;
 			break;
 		}
@@ -448,7 +472,11 @@ int japi_start_server(japi_context *ctx, const char *port)
 					perror("ERROR: accept() failed\n");
 					return -1;
 				}
-				japi_add_client(ctx,client_socket);
+				if (ctx->max_clients == 0 || ctx->num_clients < ctx->max_clients) {
+					japi_add_client(ctx,client_socket);
+				} else {
+					close(client_socket);
+				}
 			}
 
 		}
