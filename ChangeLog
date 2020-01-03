@@ -1,6 +1,7 @@
 next
 =====
 * Added support to limit the number of concurrent clients
+* Added CMake support
 
 0.2.0
 =====
