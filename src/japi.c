@@ -67,6 +67,7 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 {
 	const char* req_name;
 	json_object *jreq;
+	json_object *jreq_no;
 	json_object *jresp;
 	json_object *jresp_data;
 	json_object *jargs;
@@ -95,6 +96,12 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 
 		/* Prepare response */
 		json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
+		
+		/* Include japi_request_no in response, if included with request */
+		if (json_object_object_get_ex(jreq, "japi_request_no", &jreq_no)) {
+			json_object_get(jreq_no);
+			json_object_object_add(jresp, "japi_request_no", jreq_no);
+		}
 
 		/* Get arguments as an JSON object */
 		args = json_object_object_get_ex(jreq, "args", &jargs);

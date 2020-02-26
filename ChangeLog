@@ -13,6 +13,7 @@ next
 * Added unittests based on gtest
 * Added Multi-Client support
 * Introduced JSON objects args and data for user content
+* Allow for `japi_request_no` keyword and include it in response
 
 0.1.0
 =====
