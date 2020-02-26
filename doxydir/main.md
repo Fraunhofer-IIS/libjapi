@@ -144,6 +144,33 @@ All requests return a response. The reponse format begins always with the JSON k
 
 Like the JSON request the keys and values in \a data, are request specific; additional information, like return values of a function.
 
+### Request number
+An optional key `japi_request_no` can be included with each request and will be added to the response accordingly. `japi_request_no` can be any valid JSON value.
+
+\code
+{
+  ...
+  "japi_request_no": "<request_number>",
+  ...
+}
+\endcode
+
+Example request with request number:
+\code
+{
+  "japi_request": "some_request",
+  "japi_request_no": "2020-02-20 20:22:20.202"
+}
+\endcode
+
+Response including request number:
+\code
+{
+  "japi_response": "some_request",
+  "japi_request_no": "2020-02-20 20:22:20.202"
+}
+\endcode
+
 ### Request and response format for push services
 It's the same for the push services, with the difference that there is an additional key \a service or \a services to identify the service to be targeted by the requests.
 For the push services like \a japi_pushsrv_subscribe, \a japi_pushsrv_unsubscribe, \a japi_pushsrv_list etc. an additional key value will be the \a service, or \a services for \a japi_pushsrv_list, so it's possible to backtrack the response to the origin of the request. Push service requests, responses and push-messages should look like this:
