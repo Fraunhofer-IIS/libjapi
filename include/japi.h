@@ -20,6 +20,7 @@
 #include <json-c/json.h>
 #include <creadline.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,6 +40,7 @@ typedef struct __japi_context {
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
 	struct __japi_pushsrv_context *push_services; /*!< Pointer to the JAPI push service list */
 	struct __japi_client *clients; /*!< Pointer to the JAPI client context */
+	bool include_args_in_response; /*!< Flag to include request args in response */
 } japi_context;
 
 /*!
@@ -131,6 +133,17 @@ int japi_start_server(japi_context *ctx, const char *port);
  * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
  */
 int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
+
+/*!
+ * \brief Configure context to include request arguments in response
+ *
+ * Configure context to include request arguments in response
+ *
+ * \param include_args	Include request arguments in response.
+ *
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
+ */
+int japi_include_args_in_response(japi_context *ctx, bool include_args);
 
 #ifdef __cplusplus
 }
