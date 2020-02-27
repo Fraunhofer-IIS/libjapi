@@ -67,6 +67,43 @@ TEST(JAPI,ProcessMessage)
 	japi_destroy(ctx);
 }
 
+TEST(JAPI,IncludeArgsWithResponse)
+{
+	/* Setup */
+	japi_context *ctx = japi_init(NULL);
+	char* response = NULL;
+	const char* request = "{'japi_request': 'dummy_request_handler', 'args': {'foo': 'bar'}}";
+	const char* request_int_args = "{'japi_request': 'dummy_request_handler', 'args': 42}";
+	json_object *jobj = json_object_new_object();
+	json_object *jdata = json_object_new_object();
+	int socket = 4;
+
+	/* Configure context to include request arguments in response */
+	EXPECT_EQ(japi_include_args_in_response(NULL, false), -1);
+	EXPECT_EQ(japi_include_args_in_response(ctx, false), 0);
+	EXPECT_EQ(japi_include_args_in_response(ctx, true), 0);
+
+	/* Register dummy request handler */
+	japi_register_request(ctx,"dummy_request_handler",&dummy_request_handler);
+
+	/* Response should include request arguments object */
+	EXPECT_EQ(japi_process_message(ctx, request, &response, socket),0);
+	jobj = json_tokener_parse(response);
+	EXPECT_TRUE(json_object_object_get_ex(jobj, "args", &jdata));
+	EXPECT_STREQ("bar", japi_get_value_as_str(jdata, "foo"));
+
+	/* Response should include request argument integer */
+	EXPECT_EQ(japi_process_message(ctx, request_int_args, &response, socket),0);
+	jobj = json_tokener_parse(response);
+	EXPECT_TRUE(json_object_object_get_ex(jobj, "args", &jdata));
+	EXPECT_EQ(42, json_object_get_int(jdata));
+	
+	/* Teardown */
+	json_object_put(jobj);
+	json_object_put(jdata);
+	japi_destroy(ctx);
+}
+
 TEST(JAPI,Register)
 {
 	japi_context *ctx;

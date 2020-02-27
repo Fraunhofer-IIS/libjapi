@@ -105,11 +105,17 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 
 		/* Get arguments as an JSON object */
 		args = json_object_object_get_ex(jreq, "args", &jargs);
-
-		/* Add an empty args JSON object if no args were given */
+		
+		/* Add an empty args JSON object if no args were given
+		   Otherwise, include args with response, if configured. */
 		if (!args) {
 			json_object_object_add(jreq,"args",NULL);
 			json_object_object_get_ex(jreq, "args", &jargs);
+		} else {
+			if (ctx->include_args_in_response) {
+				json_object_get(jargs);
+				json_object_object_add(jresp, "args", jargs);
+			}
 		}
 
 		/* Look for subscribe/unsubscribe service and add/remove client socket if found */
@@ -133,7 +139,7 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 					fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
 				}
 			}
-
+			
 			/* Call request handler */
 			req_handler(ctx, jargs, jresp_data);
 		}
@@ -247,6 +253,7 @@ japi_context* japi_init(void *userptr)
 	ctx->clients = NULL;
 	ctx->num_clients = 0;
 	ctx->max_clients = 0;
+	ctx->include_args_in_response = false;
 
 	/* Initialize mutex */
 	if (pthread_mutex_init(&(ctx->lock),NULL) != 0) {
@@ -276,6 +283,22 @@ int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num)
         }
 	
 	ctx->max_clients = num;
+
+	return 0;
+}
+
+/*
+ * Include request arguments in response.
+ */
+int japi_include_args_in_response(japi_context *ctx, bool include_args)
+{
+	/* Error handling */
+	if (ctx == NULL) {
+		fprintf(stderr, "ERROR: JAPI context is NULL.\n");
+		return -1;
+	}
+	
+	ctx->include_args_in_response = include_args;
 
 	return 0;
 }
