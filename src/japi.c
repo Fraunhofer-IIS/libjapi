@@ -184,7 +184,6 @@ int japi_destroy(japi_context *ctx)
 		free(req);
 		req = req_next;
 	}
-	free(ctx);
 
 	psc = ctx->push_services;
 	while (psc != NULL) {
@@ -193,6 +192,8 @@ int japi_destroy(japi_context *ctx)
 		japi_pushsrv_destroy(psc);
 		psc = psc_next;
 	}
+
+	free(ctx);
 
 	return 0;
 }
