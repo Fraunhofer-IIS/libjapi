@@ -406,112 +406,110 @@ int japi_start_server(japi_context *ctx, const char *port)
 		return -1;
 	}
 
+	int ret;
+	int nfds;
+	fd_set fdrd;
+	japi_client *client, *following_client;
+
+	if (listen(server_socket, 1) != 0) {
+		perror("ERROR: listen() failed\n");
+		return -1;
+	}
+
+	ctx->crl_buffer.nbytes = 0;
+
 	while (1) {
 
-		int ret;
-		int nfds;
-		fd_set fdrd;
-		japi_client *client, *following_client;
+		FD_ZERO(&fdrd);
 
-		if (listen(server_socket, 1) != 0) {
-			perror("ERROR: listen() failed\n");
+		/* Add server socket to set */
+		FD_SET(server_socket, &fdrd);
+
+		nfds = server_socket + 1;
+
+		/* Add all file descriptors to set */
+		client = ctx->clients;
+		while (client != NULL) {
+			FD_SET(client->socket, &fdrd);
+			if (client->socket >= nfds) {
+				nfds = client->socket + 1;
+			}
+			client = client->next;
+		}
+
+		ret = select(nfds, &fdrd, NULL, NULL, NULL);
+		if (ret == -1) {
+			perror("ERROR: select() failed\n");
 			return -1;
 		}
 
-		ctx->crl_buffer.nbytes = 0;
+		client = ctx->clients; // Reset pointer to list
 
-		while (1) {
+		while (client != NULL) {
 
-			FD_ZERO(&fdrd);
+			following_client = client->next;
 
-			/* Add server socket to set */
-			FD_SET(server_socket, &fdrd);
+			/* Check whether there is data to process */
+			if (FD_ISSET(client->socket, &fdrd)) {
 
-			nfds = server_socket + 1;
+				int ret;
+				char* request;
+				char* response;
 
-			/* Add all file descriptors to set */
-			client = ctx->clients;
-			while (client != NULL) {
-				FD_SET(client->socket, &fdrd);
-				if (client->socket >= nfds) {
-					nfds = client->socket + 1;
+				ret = creadline_r(client->socket, (void**)&request, &(ctx->crl_buffer));
+				if (ret > 0) {
+
+					response = NULL;
+
+					/* Received a line, process it... */
+					japi_process_message(ctx, request, &response, client->socket);
+
+					/* Send response (if provided) */
+					if (response != NULL) {
+						ret = write_n(client->socket, response, strlen(response));
+						free(response);
+
+						if (ret <= 0) {
+							/* Write failed */
+							fprintf(stderr, "ERROR: Failed to send response to client %i (write returned %i)\n",client->socket, ret);
+							japi_remove_client(ctx,client->socket);
+						}
+					}
+				} else if (ret == 0) {
+					if(request == NULL) {
+						/* Received EOF (client disconnected) */
+						prntdbg("client %d disconnected\n",client->socket);
+						japi_remove_client(ctx,client->socket);
+					} else {
+						/* Received an empty line */
+					}
+				} else {
+					fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
+					japi_remove_client(ctx,client->socket);
 				}
-				client = client->next;
+				free(request);
 			}
+			client = following_client;
+		}
 
-			ret = select(nfds, &fdrd, NULL, NULL, NULL);
-			if (ret == -1) {
-				perror("ERROR: select() failed\n");
+		/* Check whether there are new clients */
+		if (FD_ISSET(server_socket, &fdrd)) {
+			int client_socket = 0;
+
+			client_socket = accept(server_socket, NULL, NULL);
+			if (client_socket < 0) {
+				perror("ERROR: accept() failed\n");
 				return -1;
 			}
-
-			client = ctx->clients; // Reset pointer to list
-
-			while (client != NULL) {
-
-				following_client = client->next;
-
-				/* Check whether there is data to process */
-				if (FD_ISSET(client->socket, &fdrd)) {
-
-					int ret;
-					char* request;
-					char* response;
-
-					ret = creadline_r(client->socket, (void**)&request, &(ctx->crl_buffer));
-					if (ret > 0) {
-
-						response = NULL;
-
-						/* Received a line, process it... */
-						japi_process_message(ctx, request, &response, client->socket);
-
-						/* Send response (if provided) */
-						if (response != NULL) {
-							ret = write_n(client->socket, response, strlen(response));
-							free(response);
-
-							if (ret <= 0) {
-								/* Write failed */
-								fprintf(stderr, "ERROR: Failed to send response to client %i (write returned %i)\n",client->socket, ret);
-								japi_remove_client(ctx,client->socket);
-							}
-						}
-					} else if (ret == 0) {
-						if(request == NULL) {
-							/* Received EOF (client disconnected) */
-							prntdbg("client %d disconnected\n",client->socket);
-							japi_remove_client(ctx,client->socket);
-						} else {
-							/* Received an empty line */
-						}
-					} else {
-						fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
-						japi_remove_client(ctx,client->socket);
-					}
-					free(request);
-				}
-				client = following_client;
+			if (ctx->max_clients == 0 || ctx->num_clients < ctx->max_clients) {
+				japi_add_client(ctx,client_socket);
+			} else {
+				close(client_socket);
 			}
-
-			/* Check whether there are new clients */
-			if (FD_ISSET(server_socket, &fdrd)) {
-				int client_socket = 0;
-
-				client_socket = accept(server_socket, NULL, NULL);
-				if (client_socket < 0) {
-					perror("ERROR: accept() failed\n");
-					return -1;
-				}
-				if (ctx->max_clients == 0 || ctx->num_clients < ctx->max_clients) {
-					japi_add_client(ctx,client_socket);
-				} else {
-					close(client_socket);
-				}
-			}
-
 		}
+
 	}
+
 	close(server_socket);
 
 	return 0;
