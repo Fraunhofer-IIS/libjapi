@@ -74,8 +74,8 @@ TEST(JAPI,IncludeArgsWithResponse)
 	char* response = NULL;
 	const char* request = "{'japi_request': 'dummy_request_handler', 'args': {'foo': 'bar'}}";
 	const char* request_int_args = "{'japi_request': 'dummy_request_handler', 'args': 42}";
-	json_object *jobj = json_object_new_object();
-	json_object *jdata = json_object_new_object();
+	json_object *jobj;
+	json_object *jdata;
 	int socket = 4;
 
 	/* Configure context to include request arguments in response */
@@ -99,8 +99,6 @@ TEST(JAPI,IncludeArgsWithResponse)
 	EXPECT_EQ(42, json_object_get_int(jdata));
 	
 	/* Teardown */
-	json_object_put(jobj);
-	json_object_put(jdata);
 	japi_destroy(ctx);
 }
 
