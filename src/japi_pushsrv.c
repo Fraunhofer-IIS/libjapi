@@ -338,6 +338,8 @@ int japi_pushsrv_destroy(japi_pushsrv_context *psc)
 	pthread_mutex_unlock(&(psc->lock));
 
 	japi_pushsrv_stop(psc);
+
+	pthread_mutex_destroy(&(psc->lock));
 	free_pushsrv(psc);
 
 	return 0;
