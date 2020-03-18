@@ -188,11 +188,11 @@ int japi_destroy(japi_context *ctx)
 	psc = ctx->push_services;
 	while (psc != NULL) {
 		psc_next = psc->next;
-		pthread_mutex_destroy(&(psc->lock));
 		japi_pushsrv_destroy(psc);
 		psc = psc_next;
 	}
 
+	pthread_mutex_destroy(&(ctx->lock));
 	free(ctx);
 
 	return 0;
