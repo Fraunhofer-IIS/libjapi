@@ -66,6 +66,17 @@ int japi_pushsrv_remove_client(japi_pushsrv_context *psc, int socket);
 int japi_remove_client(japi_context *ctx, int socket);
 
 /*!
+ * \brief Remove all clients
+ *
+ * Remove all clients from JAPI context and pushs service context.
+ *
+ * \param ctx		JAPI context
+ *
+ * \returns	On success, 0 is returned. On error, -1 is returned if a client cannot be removed.
+ */
+int japi_remove_all_clients(japi_context *ctx);
+
+/*!
  * \brief Add client
  *
  * Add client to JAPI context client list.

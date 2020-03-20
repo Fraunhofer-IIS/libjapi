@@ -21,6 +21,7 @@
 #include <string.h> /* strcmp */
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "japi.h"
@@ -168,6 +169,18 @@ out_free:
 	return ret;
 }
 
+int japi_shutdown(japi_context *ctx)
+{
+	if (ctx == NULL) {
+		fprintf(stderr, "ERROR: JAPI context is NULL.\n");
+		return -1;
+	}
+
+	ctx->shutdown = true;
+
+	return 0;		
+}
+
 int japi_destroy(japi_context *ctx)
 {
 	japi_request *req, *req_next;
@@ -255,6 +268,7 @@ japi_context* japi_init(void *userptr)
 	ctx->num_clients = 0;
 	ctx->max_clients = 0;
 	ctx->include_args_in_response = false;
+	ctx->shutdown = false;
 
 	/* Initialize mutex */
 	if (pthread_mutex_init(&(ctx->lock),NULL) != 0) {
@@ -396,6 +410,25 @@ int japi_remove_client(japi_context *ctx, int socket)
 	return ret;
 }
 
+int japi_remove_all_clients(japi_context *ctx) 
+{
+	japi_client *client, *following_client;
+
+	/* Error Handling */
+	assert(ctx != NULL);
+	
+	client = ctx->clients;
+	while (client != NULL) {
+		following_client = client->next;
+		if (japi_remove_client(ctx,client->socket) != 0) {
+			return -1;
+		}
+		client = following_client;
+	}
+
+	return 0;
+}
+
 int japi_start_server(japi_context *ctx, const char *port)
 {
 	int server_socket;
@@ -409,6 +442,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 	int ret;
 	int nfds;
 	fd_set fdrd;
+	struct timeval timeout;
 	japi_client *client, *following_client;
 
 	if (listen(server_socket, 1) != 0) {
@@ -437,10 +471,19 @@ int japi_start_server(japi_context *ctx, const char *port)
 			client = client->next;
 		}
 
-		ret = select(nfds, &fdrd, NULL, NULL, NULL);
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 200000;
+		ret = select(nfds, &fdrd, NULL, NULL, &timeout);
 		if (ret == -1) {
 			perror("ERROR: select() failed\n");
 			return -1;
+		}
+
+		/* Check if there is a request to shutdown the server */
+		if (ctx->shutdown == true) {
+			break;
+		} else if (ret == 0) {
+			continue;
 		}
 
 		client = ctx->clients; // Reset pointer to list
@@ -503,12 +546,15 @@ int japi_start_server(japi_context *ctx, const char *port)
 			}
 			if (ctx->max_clients == 0 || ctx->num_clients < ctx->max_clients) {
 				japi_add_client(ctx,client_socket);
+				prntdbg("client %d added\n",client_socket);
 			} else {
 				close(client_socket);
 			}
 		}
-
 	}
+
+	/* Clean up */
+	japi_remove_all_clients(ctx);	
 
 	close(server_socket);
 

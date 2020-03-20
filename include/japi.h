@@ -41,6 +41,7 @@ typedef struct __japi_context {
 	struct __japi_pushsrv_context *push_services; /*!< Pointer to the JAPI push service list */
 	struct __japi_client *clients; /*!< Pointer to the JAPI client context */
 	bool include_args_in_response; /*!< Flag to include request args in response */
+	bool shutdown; /*!< Flag to shutdown the JAPI server */
 } japi_context;
 
 /*!
@@ -144,6 +145,17 @@ int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
  * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
  */
 int japi_include_args_in_response(japi_context *ctx, bool include_args);
+
+/*!
+ * \brief Shutdown the JAPI server
+ *
+ * Shutdown the JAPI server.
+ *
+ * \param ctx	JAPI context
+ *
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
+ */
+int japi_shutdown(japi_context *ctx);
 
 #ifdef __cplusplus
 }
