@@ -15,52 +15,190 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdio.h> /* printf, fprintf */
 #include <string.h> /* strcasecmp */
 #include <json-c/json.h>
 
+#include "japi_utils.h"
+
 
 /* Look for a JSON object with the key 'key' and return its value as a string.
  *
- * NULL is returned if there is no object with a key 'key' or if the value is
- * not a string type.
+ * returns
+ *  0 if legal string value could be fetched
+ *  -1 if given JSON object is NULL
+ *  -2 if given key is NULL
+ *  -3 if given key doesn't exist
+ *  -4 if the requested value is not a string type
  */
-const char* japi_get_value_as_str(json_object *jobj, const char *key)
+int japi_get_value_as_str(json_object *jobj, const char *key, const char** val)
 {
 	json_object *jval;
 
-	assert(jobj != NULL);
-	assert(key != NULL);
-
-	if (json_object_object_get_ex(jobj, key, &jval)) {
-		if (json_object_is_type(jval, json_type_string)) {
-			return json_object_get_string(jval);
-		}
+	/* Error Handling */
+	if (jobj == NULL) {
+		return -1;
+	}
+	if (key == NULL) {
+		return -2;
 	}
 
-	return NULL;
+	/* Key doesn't exist */
+	if (!json_object_object_get_ex(jobj, key, &jval)) {
+		return -3;
+	}
+
+	/* The requested value is not a string type */
+	if (!json_object_is_type(jval, json_type_string)) {
+		return -4;
+	}
+
+	*val = json_object_get_string(jval);
+
+	return 0;
 }
 
 /* Look for a JSON object with the key 'key' and return its value as a bool.
  *
- * NULL is returned if there is no object with a key 'key' or if the value is
- * not a boolean type.
+ * returns
+ *  0 if legal boolean value could be fetched
+ *  -1 if given JSON object is NULL
+ *  -2 if given key is NULL
+ *  -3 if given key doesn't exist
+ *  -4 if the requested value is not a boolean type
  */
-bool japi_get_value_as_bool(json_object *jobj, const char *key)
+int japi_get_value_as_bool(json_object *jobj, const char *key, bool *val)
 {
 	json_object *jval;
 
-	assert(jobj != NULL);
-	assert(key != NULL);
-
-	if (json_object_object_get_ex(jobj, key, &jval)) {
-		if (json_object_is_type(jval, json_type_boolean)) {
-			return json_object_get_boolean(jval);
-		}
+	/* Error Handling */
+	if (jobj == NULL) {
+		return -1;
+	}
+	if (key == NULL) {
+		return -2;
 	}
 
-	return NULL;
+	/* Key doesn't exist */
+	if (!json_object_object_get_ex(jobj, key, &jval)) {
+		return -3;
+	}
+
+	/* The requested value is not a boolean type */
+	if (!json_object_is_type(jval, json_type_boolean)) {
+		return -4;
+	}
+
+	*val = json_object_get_boolean(jval);
+
+	return 0;
+}
+
+/* Look for a JSON object with the key 'key' and return its value as a int.
+ *
+ * returns
+ *  0 if legal int value could be fetched
+ *  -1 if given JSON object is NULL
+ *  -2 if given key is NULL
+ *  -3 if given key doesn't exist
+ *  -4 if the requested value is not a int type
+ */
+int japi_get_value_as_int(json_object *jobj, const char *key, int *val)
+{
+	json_object *jval;
+
+	/* Error Handling */
+	if (jobj == NULL) {
+		return -1;
+	}
+	if (key == NULL) {
+		return -2;
+	}
+
+	/* Key doesn't exist */
+	if (!json_object_object_get_ex(jobj, key, &jval)) {
+		return -3;
+	}
+
+	/* The requested value is not a int type */
+	if (!json_object_is_type(jval, json_type_int)) {
+		return -4;
+	}
+
+	*val = json_object_get_int(jval);
+
+	return 0;
+}
+/* Look for a JSON object with the key 'key' and return its value as a int64.
+ *
+ * returns
+ *  0 if legal int64 value could be fetched
+ *  -1 if given JSON object is NULL
+ *  -2 if given key is NULL
+ *  -3 if given key doesn't exist
+ *  -4 if the requested value is not a int64 type
+ */
+int japi_get_value_as_int64(json_object *jobj, const char *key, long long int *val)
+{
+	json_object *jval;
+
+	/* Error Handling */
+	if (jobj == NULL) {
+		return -1;
+	}
+	if (key == NULL) {
+		return -2;
+	}
+
+	/* Key doesn't exist */
+	if (!json_object_object_get_ex(jobj, key, &jval)) {
+		return -3;
+	}
+
+	/* The requested value is not a int64 type */
+	if (!json_object_is_type(jval, json_type_int)) {
+		return -4;
+	}
+
+	*val = json_object_get_int64(jval);
+
+	return 0;
+}
+
+/* Look for a JSON object with the key 'key' and return its value as a double.
+ *
+ * returns
+ *  0 if legal double value could be fetched
+ *  -1 if given JSON object is NULL
+ *  -2 if given key is NULL
+ *  -3 if given key doesn't exist
+ *  -4 if the requested value is not a double type
+ */
+int japi_get_value_as_double(json_object *jobj, const char *key, double *val)
+{
+	json_object *jval;
+
+	/* Error Handling */
+	if (jobj == NULL) {
+		return -1;
+	}
+	if (key == NULL) {
+		return -2;
+	}
+
+	/* Key doesn't exist */
+	if (!json_object_object_get_ex(jobj, key, &jval)) {
+		return -3;
+	}
+
+	/* The requested value is not a double type */
+	if (!json_object_is_type(jval, json_type_double)) {
+		return -4;
+	}
+
+	*val = json_object_get_double(jval);
+
+	return 0;
 }
 
 

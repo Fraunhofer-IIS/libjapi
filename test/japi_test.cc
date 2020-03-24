@@ -23,18 +23,63 @@ TEST(JAPI,Init)
 	EXPECT_TRUE(japi_init(NULL) != NULL);
 }
 
-TEST(JAPI,GetValueAsStringAndBool)
+TEST(JAPI,GetValueAsX)
 {
+	bool bval;
+	const char* sval;
+	int ival;
+	long long int lval;
+	double dval;
 	json_object *jresp;
 
 	jresp = json_object_new_object();
-	json_object_object_add(jresp,"key",json_object_new_string("value"));
+	json_object_object_add(jresp,"string",json_object_new_string("value"));
 	json_object_object_add(jresp,"bool",json_object_new_boolean(TRUE));
+	json_object_object_add(jresp,"int",json_object_new_int(10));
+	json_object_object_add(jresp,"int64",json_object_new_int64(9000000000000000000));
+	json_object_object_add(jresp,"double",json_object_new_double(10.12345));
 
-	/* On success, string is returned. On error, NULL is returned */
-	EXPECT_STREQ(japi_get_value_as_str(jresp,"key"),"value");
-	/* On success, bool is returned. On error, NULL is returned */
-	EXPECT_TRUE(japi_get_value_as_bool(jresp,"bool"));
+	/* On success, string is returned. On error, <0 is returned */
+	EXPECT_EQ(japi_get_value_as_str(jresp, "string", &sval), 0);
+	EXPECT_STREQ(sval,"value");
+	/* On success, bool is returned. On error, <0 is returned */
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "bool",&bval),0);
+	EXPECT_TRUE(bval);
+	/* On success, int is returned. On error, <0 is returned */
+	EXPECT_EQ(japi_get_value_as_int(jresp, "int",&ival),0);
+	EXPECT_EQ(ival,10);
+	/* On success, int64 is returned. On error, <0 is returned */
+	EXPECT_EQ(japi_get_value_as_int64(jresp, "int64",&lval),0);
+	EXPECT_EQ(lval,9000000000000000000);
+	/* On success, double is returned. On error, <0 is returned */
+	EXPECT_EQ(japi_get_value_as_double(jresp, "double",&dval),0);
+	EXPECT_EQ(dval,10.12345);
+
+	/* Test error return values */
+	/* Given json-object is NULL, expecting -1 */
+	EXPECT_EQ(japi_get_value_as_str(NULL, "string", &sval), -1);
+	EXPECT_EQ(japi_get_value_as_bool(NULL, "bool", &bval), -1);
+	EXPECT_EQ(japi_get_value_as_int(NULL, "int", &ival), -1);
+	EXPECT_EQ(japi_get_value_as_int64(NULL, "int64", &lval), -1);
+	EXPECT_EQ(japi_get_value_as_double(NULL, "double", &dval), -1);
+	/* Given key is NULL, expecting -2 */
+	EXPECT_EQ(japi_get_value_as_str(jresp, NULL, &sval), -2);
+	EXPECT_EQ(japi_get_value_as_bool(jresp, NULL, &bval), -2);
+	EXPECT_EQ(japi_get_value_as_int(jresp, NULL, &ival), -2);
+	EXPECT_EQ(japi_get_value_as_int64(jresp, NULL, &lval), -2);
+	EXPECT_EQ(japi_get_value_as_double(jresp, NULL, &dval), -2);
+	/* Given doesn't exist, expecting -3 */
+	EXPECT_EQ(japi_get_value_as_str(jresp, "NotExistingKey", &sval), -3);
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "NotExistingKey", &bval), -3);
+	EXPECT_EQ(japi_get_value_as_int(jresp, "NotExistingKey", &ival), -3);
+	EXPECT_EQ(japi_get_value_as_int64(jresp, "NotExistingKey", &lval), -3);
+	EXPECT_EQ(japi_get_value_as_double(jresp, "NotExistingKey", &dval), -3);
+	/* Requested value doesn't have the respective type, expecting -4 */
+	EXPECT_EQ(japi_get_value_as_str(jresp, "bool", &sval), -4);
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "string", &bval), -4);
+	EXPECT_EQ(japi_get_value_as_int(jresp, "string", &ival), -4);
+	EXPECT_EQ(japi_get_value_as_int64(jresp, "string", &lval), -4);
+	EXPECT_EQ(japi_get_value_as_double(jresp, "string", &dval), -4);
 
 	/* Clean up */
 	json_object_put(jresp);
@@ -45,6 +90,7 @@ TEST(JAPI,ProcessMessage)
 	japi_context *ctx;
 	char* response;
 	const char* request;
+	const char* sval;
 	json_object *jobj;
 	json_object *jdata;
 	int socket;
@@ -61,7 +107,8 @@ TEST(JAPI,ProcessMessage)
 	EXPECT_EQ(japi_process_message(ctx, request, &response, socket),0);
 	jobj = json_tokener_parse(response);
 	json_object_object_get_ex(jobj,"data",&jdata);
-	EXPECT_STREQ("hello world",japi_get_value_as_str(jdata,"value"));
+	EXPECT_EQ(japi_get_value_as_str(jdata,"value",&sval),0);
+	EXPECT_STREQ("hello world",sval);
 
 	/* Clean up */
 	japi_destroy(ctx);
@@ -72,6 +119,7 @@ TEST(JAPI,IncludeArgsWithResponse)
 	/* Setup */
 	japi_context *ctx = japi_init(NULL);
 	char* response = NULL;
+	const char* sval;
 	const char* request = "{'japi_request': 'dummy_request_handler', 'args': {'foo': 'bar'}}";
 	const char* request_int_args = "{'japi_request': 'dummy_request_handler', 'args': 42}";
 	json_object *jobj;
@@ -90,7 +138,8 @@ TEST(JAPI,IncludeArgsWithResponse)
 	EXPECT_EQ(japi_process_message(ctx, request, &response, socket),0);
 	jobj = json_tokener_parse(response);
 	EXPECT_TRUE(json_object_object_get_ex(jobj, "args", &jdata));
-	EXPECT_STREQ("bar", japi_get_value_as_str(jdata, "foo"));
+	EXPECT_EQ(japi_get_value_as_str(jdata,"foo",&sval),0);
+	EXPECT_STREQ("bar", sval);
 
 	/* Response should include request argument integer */
 	EXPECT_EQ(japi_process_message(ctx, request_int_args, &response, socket),0);
@@ -143,6 +192,7 @@ TEST(JAPI_Push_Service,SubscribeAndUnsubscribe)
 {
 	int socket;
 	char* pushsrv_name;
+	bool bval;
 	japi_context *ctx;
 	json_object *jreq;
 	json_object *jresp;
@@ -162,39 +212,49 @@ TEST(JAPI_Push_Service,SubscribeAndUnsubscribe)
 
 	/* Sub-/unsubscribe before registering, expecting false */
 	japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
-	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_FALSE(bval);
 
 	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
-	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_FALSE(bval);
 
 	/* Pass illegal JSON request, expecting false */
 	json_object_object_add(illegal_req,"service",NULL);
 
 	japi_pushsrv_subscribe(ctx,socket,illegal_req,jresp);
-	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_FALSE(bval);
 
 	japi_pushsrv_unsubscribe(ctx,socket,illegal_req,jresp);
-	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_FALSE(bval);
 
+	/* Pass illegal key */
 	json_object_object_add(bad_req,"bad_key",json_object_new_string(pushsrv_name));
 
 	japi_pushsrv_subscribe(ctx,socket,bad_req,jresp);
-	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_FALSE(bval);
 
 	japi_pushsrv_unsubscribe(ctx,socket,bad_req,jresp);
-	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_FALSE(bval);
 
 	/* Try to unsubscribe without subscribed before, should fail */
 	japi_pushsrv_register(ctx,"test_pushsrv");
 	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
-	EXPECT_FALSE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_FALSE(bval);
 
 	/* Expect true */
 	japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
-	EXPECT_TRUE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_TRUE(bval);
 
 	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
-	EXPECT_TRUE(japi_get_value_as_bool(jresp, "success"));
+	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
+	EXPECT_TRUE(bval);
 
 	/* Clean up */
 	json_object_put(jresp);
@@ -294,6 +354,7 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	json_object *push_status_jreq;
 	json_object *push_temperature_jreq;
 	int counter;
+	bool bval;
 
 	push_status_jreq = json_object_new_object();
 	push_temperature_jreq = json_object_new_object();
@@ -344,7 +405,8 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 
 	/* Unsubscribe client that is not subscribed */
 	japi_pushsrv_unsubscribe(ctx,15,push_temperature_jreq,jobj);
-	EXPECT_FALSE(japi_get_value_as_bool(jobj,"success"));
+	EXPECT_EQ(japi_get_value_as_bool(jobj, "success",&bval),0);
+	EXPECT_FALSE(bval);
 }
 
 TEST(JAPI_Push_Service,PushServiceDestroy)

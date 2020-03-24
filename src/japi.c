@@ -93,7 +93,7 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 		return -1;
 	}
 
-	if ((req_name = japi_get_value_as_str(jreq, "japi_request")) != NULL) {
+	if ((japi_get_value_as_str(jreq, "japi_request", &req_name)) == 0) {
 
 		/* Prepare response */
 		json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
