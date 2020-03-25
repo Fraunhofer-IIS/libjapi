@@ -1,9 +1,15 @@
 next
 =====
+* ...
+
+0.3.0
+=====
 * Added support to limit the number of concurrent clients
 * Added CMake support
 * Allow for `japi_request_no` keyword and include it in response
 * Support including request arguments in response via `japi_include_arguments_in_response()`
+* Added `japi_shutdown()` command to stop all JAPI threads
+* Changed API for `japi_get_value_as_XXX`functions. Added support for int/int64 and double
 
 0.2.0
 =====
