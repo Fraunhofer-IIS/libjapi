@@ -88,4 +88,4 @@ target_include_directories(testsuite
     ${JSONC_INCLUDE_DIRS}
 )
 
-add_custom_target(run_test COMMAND testsuite)
+add_custom_target(run_test COMMAND testsuite DEPENDS testsuite)
