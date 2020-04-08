@@ -19,6 +19,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${multicore}
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${warnings} ${independent} ${optimize} ${pre_processor} ${debug}")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${independent} ${optimize} ${pre_processor} ${release}")
 
+set(CMAKE_BUILD_TYPE "Release")
+
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*)
 file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 
