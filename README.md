@@ -19,12 +19,21 @@ The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software
 
 ### Prerequisites
 * [json-c](https://github.com/json-c/json-c)
+* [cmake version 3](https://cmake.org/)
 
 ### Installation
-Run *make* in the libjapi repository.
+Run *cmake* in the libjapi repository.
 ```shell
+$ mkdir build
+$ cd build/
+$ cmake ../
+```
+A Makefile is generated. Run 'make' to build the libjapi libraries.
+```
 $ make
 ```
+The shared and static libraries are to be found in the directory 'make' was run.
+
 ## Demo
 You can clone the demo project, with examples for all features from the repository listed below:
 
@@ -38,7 +47,8 @@ $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi
 * Start a JAPI server
 * Enjoy the flexibility
 
-## Integration in Cmake
+## Integration into Cmake
+* The package 'pkg-config' needs to be installed for the libjapi CMake file to check for prerequisites.
 * add "-pthread" flag to compiler options
   ```cmake
   set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -pthread")

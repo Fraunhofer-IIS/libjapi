@@ -5,7 +5,7 @@ next
 0.3.0
 =====
 * Added support to limit the number of concurrent clients
-* Added CMake support
+* Switched to CMake
 * Allow for `japi_request_no` keyword and include it in response
 * Support including request arguments in response via `japi_include_arguments_in_response()`
 * Added `japi_shutdown()` command to stop all JAPI threads

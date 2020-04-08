@@ -2,39 +2,35 @@ cmake_minimum_required(VERSION 3.5)
 
 project(libjapi VERSION 0.3)
 set(SOVERSION 1)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(warnings "-Wall")
+set(muticore "-pthread")
+set(optimize "-O2")
+set(pre_processor "-D_POSIX_C_SOURCE=200809L")
+set(release "-D NDEBUG")
+set(debug "-g")
+set(independent "-fPIC")
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${warnings} ${multicore} ${optimize} ${debug}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${multicore} ${optimize} ${release}")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${warnings} ${independent} ${optimize} ${pre_processor} ${debug}")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${independent} ${optimize} ${pre_processor} ${release}")
+
+file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*)
+file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
+
+##############################################
+# Create shared and static libjapi libraries #
 
 # configure libraries
 find_package(PkgConfig)
 pkg_search_module(JSONC REQUIRED json-c)
 
-
-# header files to be installed
-set(PUBLIC_HEADERS
-    include/creadline.h
-    include/japi_pushsrv.h
-    include/japi_utils.h
-    include/japi.h
-    include/networking.h
-    include/rw_n.h
-  )
-
-# the sources (including all header files)
-set(SOURCES
-    src/japi_utils.c
-    src/japi.c
-    src/japi_pushsrv.c
-    src/rw_n.c
-    src/japi_intern.h
-    src/japi_pushsrv_intern.h
-    src/prntdbg.h
-    src/creadline.c
-    src/networking.c
-
-    ${PUBLIC_HEADERS}
-  )
-
 # create an object lib to avoid double compilation
-add_library(japi_objs OBJECT ${SOURCES})
+add_library(japi_objs OBJECT ${SOURCES} ${HEADERS})
 target_include_directories(japi_objs PUBLIC include/ ${JSONC_INCLUDE_DIRS})
 set_property(TARGET japi_objs PROPERTY POSITION_INDEPENDENT_CODE ON)
 
@@ -54,3 +50,42 @@ install(TARGETS japi
   ARCHIVE DESTINATION lib
   PUBLIC_HEADER DESTINATION include
 )
+
+################################
+# Create Doxygen documentation #
+
+find_package(Doxygen)
+
+if(DOXYGEN_FOUND)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  add_custom_target(doc
+    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen" VERBATIM
+  )
+endif(DOXYGEN_FOUND)
+
+################################
+# Create unit test excecutable #
+
+add_subdirectory(googletest/googletest
+                 EXCLUDE_FROM_ALL)
+
+add_executable(testsuite
+  EXCLUDE_FROM_ALL
+    test/japi_test.cc
+)
+
+target_link_libraries(testsuite
+  gtest_main
+  japi-static json-c
+)
+
+target_include_directories(testsuite
+  PUBLIC
+    include/
+    src/
+    ${JSONC_INCLUDE_DIRS}
+)
+
+add_custom_target(run_test COMMAND testsuite)
