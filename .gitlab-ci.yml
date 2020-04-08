@@ -14,39 +14,46 @@ stages:
 job 1:
         stage: build
         script:
+        - "mkdir build && cd build"
+        - "cmake3 ../ 2>&1 | tee cmake.log"
         - "make 2>&1 | tee build.log"
         artifacts:
                 when: always
                 expire_in: 1 week
                 paths:
-                        - "obj/*"
-                        - "lib/libjapi.a"
-                        - build.log
+                        - "build/libjapi.so"
+                        - "build/libjapi-static.a"
+                        - "build/cmake.log"
+                        - "build/build.log"
 job 2:
         stage: build_test
         script:
-        - "make build_test 2>&1 | tee build_test.log"
+        - "cd build"
+        - "cmake3 ../"
+        - "make testsuite 2>&1 | tee build_test.log"
         artifacts:
                 when: always
                 expire_in: 1 week
                 paths:
-                        - build_test.log
-                        - "testobj/*"
-                        - "googletest/googletest/make/libgtest_main.a"
+                        - "build/build_test.log"
                         - "test/*"
-                        - "testsuite"
+                        - "build/testsuite"
 job 3:
         stage: run_test
         script:
+        - "cd build"
+        - "cmake3 ../"
         - "make run_test 2>&1 | tee run_test.log"
         artifacts:
                 when: always
                 expire_in: 1 week
                 paths:
-                        - run_test.log
+                        - "build/run_test.log"
 job 4:
         stage: doc
         script:
+        - "cd build"
+        - "cmake3 ../"
         - "make doc 2>&1 | tee doc.log"
         artifacts:
                 when: always
@@ -70,14 +77,15 @@ pages:
         - job 1
         - job 5
         script:
+        - cd build
         - mkdir -p public
         - mkdir -p public/repo/x86_64
         - mv doc public
-        - mv package/libjapi.repo public/repo/
+        - mv ../package/libjapi.repo public/repo/
         - touch public/repo/index.html
-        - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)</a></p>" >> public/repo/index.html)
-        - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)>$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)</a></p>" >> public/repo/index.html)
-        - "cp package/rpmbuild/RPMS/x86_64/libjapi*.rpm public/repo/x86_64/"
+        - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)>$(basename ../package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)</a></p>" >> public/repo/index.html)
+        - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)>$(basename ../package/rpmbuild/RPMS/x86_64/libjapi-doc*.rpm)</a></p>" >> public/repo/index.html)
+        - "cp ../package/rpmbuild/RPMS/x86_64/libjapi*.rpm public/repo/x86_64/"
         - createrepo public/repo/
         - yum-config-manager --add-repo public/repo/libjapi.repo
         artifacts:

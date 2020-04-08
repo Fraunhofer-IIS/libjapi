@@ -15,20 +15,31 @@ which push custom JSON messages to the clients subscribed to them.
 
 ### Prerequisites
 - [json-c] (https://github.com/json-c/json-c)
+- [cmake version 3](https://cmake.org/)
 
 ### Installation
 
 \anchor build
 #### Build
-Clone the git repository with:
+Clone the git repository and update the submodule:
 \code
 $ git clone git@git01.iis.fhg.de:ks-ip-lib/software/libjapi.git
+$ git submodule init
+$ git submodule update
 \endcode
 
-Run \a make in the libjapi repository.
+Run \a cmake in the libjapi repository.
+\code
+$ mkdir build/
+$ cd build/
+$ cmake ../
+\endcode
+
+A Makefile is generated. Run \a make to build the libjapi libraries.
 \code
 $ make
 \endcode
+The shared and static libraries are to be found in the directory \a make was run.
 
 #### Packages
 The packages can be found <a href="../../repo/index.html">here</a>.

@@ -140,6 +140,7 @@ int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
  *
  * Configure context to include request arguments in response
  *
+ * \param ctx		JAPI context
  * \param include_args	Include request arguments in response.
  *
  * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.

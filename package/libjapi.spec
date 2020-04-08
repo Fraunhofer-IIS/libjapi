@@ -26,6 +26,8 @@ Build documentation for the libjapi
 %setup -q -n libjapi
 
 %build
+cd build
+cmake3 ../
 make
 make doc
 
@@ -33,19 +35,19 @@ make doc
 install -d %{buildroot}/%{_libdir}/libjapi/
 install -d %{buildroot}/%{_docdir}/libjapi/
 install -d %{buildroot}/%{_includedir}/libjapi/
-cp -ra %{_builddir}/libjapi/lib/*.so %{buildroot}/%{_libdir}/
-cp -ra %{_builddir}/libjapi/doc/ %{buildroot}/%{_docdir}/libjapi/
-cp -ra %{_builddir}/libjapi/doxydir/ %{buildroot}/%{_docdir}/libjapi/
-cp -ra %{_builddir}/libjapi/Doxyfile %{buildroot}/%{_docdir}/libjapi/
+cp -ra %{_builddir}/libjapi/build/*.so %{buildroot}/%{_libdir}/
+cp -ra %{_builddir}/libjapi/build/*.so.1 %{buildroot}/%{_libdir}/
+cp -ra %{_builddir}/libjapi/build/doc/ %{buildroot}/%{_docdir}/libjapi/
 cp -ra %{_builddir}/libjapi/README.md %{buildroot}/%{_docdir}/libjapi/
 cp -ra %{_builddir}/libjapi/include/* %{buildroot}/%{_includedir}/libjapi/
 
 %files doc
-%{_docdir}/libjapi/
+%{_docdir}/libjapi
 
 %files
 %{_libdir}/libjapi.so
-%{_includedir}/libjapi/
+%{_libdir}/libjapi.so.1
+%{_includedir}/libjapi
 
 %changelog
 * Wed Jun 19 2019 Deniz Armagan <Deniz.Armagan@iis.fraunhofer.de>
