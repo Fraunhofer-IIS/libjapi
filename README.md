@@ -19,7 +19,7 @@ The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software
 
 ### Prerequisites
 * [json-c](https://github.com/json-c/json-c)
-* [cmake version 3](https://cmake.org/)
+* [cmake version 3.5](https://cmake.org/)
 
 ### Installation
 Run *cmake* in the libjapi repository.
