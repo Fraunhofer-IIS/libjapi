@@ -2,7 +2,7 @@
 
 # libjapi
 
-libjapi is a universial JSON API library. It receives newline-delimited JSON
+libjapi is a universal JSON API library. It receives newline-delimited JSON
 (NDJSON) messages via TCP and calls registered C functions. A JSON response is
 returned for each request. Furthermore, it is also possible to create push services,
 which push custom JSON messages to the clients subscribed to them.
