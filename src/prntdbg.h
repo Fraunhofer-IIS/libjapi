@@ -26,7 +26,7 @@
 	#if !defined(NDEBUG)
 		#define prntdbg(format, ...) fprintf(stderr, __FILE__ "(" TOSTRING(__LINE__) "): \t" format, ##__VA_ARGS__)
 	#else
-		#define prntdbg(format, args...) ((void)0)
+		#define prntdbg(format, ...) ((void)0)
 	#endif /* defined(NODEBUG) */
 #else
 	/* This compiler does not have extensions, so we just rename the function */
