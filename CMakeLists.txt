@@ -6,20 +6,11 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(warnings "-Wall")
-set(muticore "-pthread")
-set(optimize "-O2")
-set(pre_processor "-D_POSIX_C_SOURCE=200809L")
-set(release "-D NDEBUG")
-set(debug "-g")
-set(independent "-fPIC")
 
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${warnings} ${multicore} ${optimize} ${debug}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${multicore} ${optimize} ${release}")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${warnings} ${independent} ${optimize} ${pre_processor} ${debug}")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${independent} ${optimize} ${pre_processor} ${release}")
-
-set(CMAKE_BUILD_TYPE "Release")
+# 'cmake -DCMAKE_BUILD_TYPE=Debug ../' from build folder for debug output #
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*)
 file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
@@ -33,6 +24,7 @@ pkg_search_module(JSONC REQUIRED json-c)
 
 # create an object lib to avoid double compilation
 add_library(japi_objs OBJECT ${SOURCES} ${HEADERS})
+target_compile_options(japi_objs PUBLIC "-pthread" "-D_POSIX_C_SOURCE=200809L")
 target_include_directories(japi_objs PUBLIC include/ ${JSONC_INCLUDE_DIRS})
 set_property(TARGET japi_objs PROPERTY POSITION_INDEPENDENT_CODE ON)
 
@@ -77,6 +69,8 @@ add_executable(testsuite
   EXCLUDE_FROM_ALL
     test/japi_test.cc
 )
+
+target_compile_options(testsuite PUBLIC "-pthread")
 
 target_link_libraries(testsuite
   gtest_main
