@@ -28,7 +28,7 @@ Build documentation for the libjapi
 %build
 mkdir build
 cd build
-%cmake ..
+%cmake3 ..
 %make_build
 make doc
 
