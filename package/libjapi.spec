@@ -1,6 +1,6 @@
 %define hash %(git rev-parse --short=8 HEAD)
 %define date %(date -d @$(git show -s --format=%ct %{hash}) +%Y%m%d)
-%define tag 1
+%define tag 3
 
 Name: libjapi
 Version: 0.%{tag}.%{date}_%{hash}
