@@ -59,8 +59,8 @@ job 4:
                 when: always
                 expire_in: 1 week
                 paths:
-                        - doc.log
-                        - "doc/*"
+                        - "build/doc.log"
+                        - "build/doc/*"
 job 5:
         stage: build_rpm
         script:
@@ -80,7 +80,7 @@ pages:
         - cd build
         - mkdir -p public
         - mkdir -p public/repo/x86_64
-        - mv doc public
+        - mv build/doc public
         - mv ../package/libjapi.repo public/repo/
         - touch public/repo/index.html
         - $(echo "<p><a href=x86_64/$(basename package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)>$(basename ../package/rpmbuild/RPMS/x86_64/libjapi-[0-9]*.rpm)</a></p>" >> public/repo/index.html)
