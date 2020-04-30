@@ -15,5 +15,5 @@ cd ${basedir}
 rm -rf ${topdir}
 mkdir -p ${topdir}/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 
-tar -czf ${tarball} -C ../../ libjapi
+tar -czf ${tarball} -C ../../ --exclude=build --exclude=package/rpmbuild libjapi
 rpmbuild --define "_topdir $(pwd)/${topdir}" -ba libjapi.spec

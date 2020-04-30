@@ -26,9 +26,10 @@ Build documentation for the libjapi
 %setup -q -n libjapi
 
 %build
+mkdir build
 cd build
-cmake3 ../
-make
+%cmake ..
+%make_build
 make doc
 
 %install
