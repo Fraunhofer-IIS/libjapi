@@ -53,7 +53,7 @@ typedef struct __creadline_buffer {
  * Subsequent calls to creadline_r reuse the remaining bytes (if any) and
  * continue reading from the file descriptor.
  *
- * If case EOF is read creadline_r returns 0 and sets the dst pointer to NULL if
+ * If EOF is read creadline_r returns 0 and sets the dst pointer to NULL if
  * no remaining bytes are left in the buffer. Otherweise -1 is returned.
  *
  * If a zero length line is read ("\n") creadline_r returns 0 and dst points

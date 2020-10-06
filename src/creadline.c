@@ -104,7 +104,7 @@ int creadline_r(int fd, void **dst, creadline_buf_t *buffer)
 			}
 			linebuf = new_linebuf;
 			linebuf_size = new_linebuf_size;
-	}
+		}
 
 		/* Read more bytes... */
 		readret = read(fd, linebuf+linebuf_nbytes, CREADLINE_BLOCK_SIZE);

@@ -336,6 +336,9 @@ int japi_add_client(japi_context *ctx, int socket)
 		return -1;
 	}
 
+	/* Reset the clients buffer used by creadline_r */
+	client->crl_buffer.nbytes = 0;
+
 	pthread_mutex_lock(&(ctx->lock));
 	prntdbg("adding client %d to japi context\n",socket);
 	/* Add socket */
@@ -450,8 +453,6 @@ int japi_start_server(japi_context *ctx, const char *port)
 		return -1;
 	}
 
-	ctx->crl_buffer.nbytes = 0;
-
 	while (1) {
 
 		FD_ZERO(&fdrd);
@@ -499,38 +500,42 @@ int japi_start_server(japi_context *ctx, const char *port)
 				char* request;
 				char* response;
 
-				ret = creadline_r(client->socket, (void**)&request, &(ctx->crl_buffer));
-				if (ret > 0) {
+				do {
 
-					response = NULL;
+					ret = creadline_r(client->socket, (void**)&request, &(client->crl_buffer));
+					if (ret > 0) {
 
-					/* Received a line, process it... */
-					japi_process_message(ctx, request, &response, client->socket);
+						response = NULL;
 
-					/* Send response (if provided) */
-					if (response != NULL) {
-						ret = write_n(client->socket, response, strlen(response));
-						free(response);
+						/* Received a line, process it... */
+						japi_process_message(ctx, request, &response, client->socket);
 
-						if (ret <= 0) {
-							/* Write failed */
-							fprintf(stderr, "ERROR: Failed to send response to client %i (write returned %i)\n",client->socket, ret);
-							japi_remove_client(ctx,client->socket);
+						/* Send response (if provided) */
+						if (response != NULL) {
+							ret = write_n(client->socket, response, strlen(response));
+							free(response);
+
+							if (ret <= 0) {
+								/* Write failed */
+								fprintf(stderr, "ERROR: Failed to send response to client %i (write returned %i)\n",client->socket, ret);
+								japi_remove_client(ctx,client->socket);
+							}
 						}
-					}
-				} else if (ret == 0) {
-					if(request == NULL) {
-						/* Received EOF (client disconnected) */
-						prntdbg("client %d disconnected\n",client->socket);
-						japi_remove_client(ctx,client->socket);
+					} else if (ret == 0) {
+						if(request == NULL) {
+							/* Received EOF (client disconnected) */
+							prntdbg("client %d disconnected\n",client->socket);
+							japi_remove_client(ctx,client->socket);
+						} else {
+							/* Received an empty line */
+						}
 					} else {
-						/* Received an empty line */
+						fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
+						japi_remove_client(ctx,client->socket);
 					}
-				} else {
-					fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
-					japi_remove_client(ctx,client->socket);
-				}
-				free(request);
+					free(request);
+
+				} while (client->crl_buffer.nbytes != 0);
 			}
 			client = following_client;
 		}

@@ -35,7 +35,6 @@ typedef struct __japi_context {
 	void *userptr; /*!< Pointer to user data */
 	uint16_t num_clients; /*!< Number of connected clients */
 	uint16_t max_clients; /*!< Number of maximal allowed clients */
-	creadline_buf_t crl_buffer; /*!< Buffer used by creadline_r() */
 	pthread_mutex_t lock; /*!< Mutual access lock */
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
 	struct __japi_pushsrv_context *push_services; /*!< Pointer to the JAPI push service list */
@@ -51,6 +50,7 @@ typedef struct __japi_context {
  */
 typedef struct __japi_client {
 	int socket; /*!< Socket to connect */
+	creadline_buf_t crl_buffer; /*!< Buffer used by creadline_r() */
 	struct __japi_client* next; /*!< Pointer to the next client struct or NULL */
 } japi_client;
 
