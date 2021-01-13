@@ -55,6 +55,19 @@ static int tcp_start_server_on_addr_family(const char* port, int ai_family)
 		if (sfd == -1)
 	    	continue;
 
+		/* Sometimes after a server shutdown the server socket can get
+		into TIME_WAIT state and it is no longer possible to use it again.
+		With SO_REUSEADDR enabled, the server socket can be reused
+		instantaneously after a shutdown. setsockopt() needs to be called
+		before bind. */
+
+		int reuse = 1; /* Set SO_REUSEADDR to 1(True) */
+		if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+			perror("ERROR: setsocktop");
+			fprintf(stderr, "WARNING: Reuse of server socket wont be possible. \n");
+			/* The programm can go on. */
+		};
+
 		if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == 0)
 			break;                  /* Success */
 	
