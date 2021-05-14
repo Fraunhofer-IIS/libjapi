@@ -1,4 +1,3 @@
-\mainpage
 
 # libjapi
 

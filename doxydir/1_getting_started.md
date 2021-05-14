@@ -1,3 +1,4 @@
+
 # Getting started
 
 ## Prerequisites
@@ -8,21 +9,21 @@
 
 ### Build
 Clone the git repository and update the submodule:
-```shell
+```
 $ git clone git@git01.iis.fhg.de:ks-ip-lib/software/libjapi.git
 $ git submodule init
 $ git submodule update
 ```
 
 Run `cmake` in the libjapi repository.
-```shell
+```
 $ mkdir build/
 $ cd build/
 $ cmake ../
 ```
 
 A Makefile is generated. Run `make` to build the libjapi libraries.
-```shell
+```
 $ make
 ```
 The shared and static libraries are to be found in the directory `make` was run.
