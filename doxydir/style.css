@@ -1,7 +1,7 @@
-div#nav-tree ul.children_ul li:nth-child(1), ul.tablist li a[href="pages.html"]
+/* div#nav-tree ul.children_ul li:nth-child(1), ul.tablist li a[href="pages.html"]
 {
 	display: none;
-}
+} */
 
 .navpath ul, .tabs, .tabs2, .tabs3, .tablist a:hover, .tablist a, #nav-tree, .tablist li.current a, #nav-tree .selected 
 {
