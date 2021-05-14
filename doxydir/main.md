@@ -13,7 +13,7 @@ which push custom JSON messages to the clients subscribed to them.
 ## Getting started
 
 ### Prerequisites
-- [json-c] (https://github.com/json-c/json-c)
+- [json-c](https://github.com/json-c/json-c)
 - [cmake version 3.5](https://cmake.org/)
 
 ### Installation

@@ -6,14 +6,14 @@ returned for each request. Furthermore, it is also possible to create push servi
 which push custom JSON messages to the clients subscribed to them.
 
 ## Documentation
-The Documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
+The documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
 
 ## Packages
-The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
+The packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
 
 ## Features
-* Push Services
-* Multi-Client support
+* Push services
+* Multi-client support
 
 ## Getting started
 
@@ -23,23 +23,22 @@ The Packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software
 
 ### Installation
 Run *cmake* in the libjapi repository.
-```shell
-$ mkdir build
-$ cd build/
-$ cmake ../
-```
+
+    $ mkdir build
+    $ cd build/
+    $ cmake ../
+
 A Makefile is generated. Run 'make' to build the libjapi libraries.
-```
-$ make
-```
+
+    $ make
+
 The shared and static libraries are to be found in the directory 'make' was run.
 
 ## Demo
 You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/libjapi-demo), with examples for all features from the repository listed below:
 
-```shell
-$ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi-demo.git
-```
+    $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi-demo.git
+
 ## Usage
 * Create a JAPI context
 * Write application specific functions
@@ -50,167 +49,164 @@ $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi
 ## Integration into Cmake
 * The package 'pkg-config' needs to be installed for the libjapi CMake file to check for prerequisites.
 * add "-pthread" flag to compiler options
-  ```cmake
-  set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -pthread")
-  ```
+
+      set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -pthread")
+  
 * Link json-c
-  ```cmake
-  pkg_search_module(JSONC REQUIRED json-c)
-  target_link_libraries( <TARGET> ${JSONC_LIBRARIES})
-  target_include_directories( <TARGET> PUBLIC ${JSONC_INCLUDE_DIRS})
-  target_compile_options( <TARGET> PUBLIC ${JSONC_CFLAGS_OTHER})
-  ```
+
+      pkg_search_module(JSONC REQUIRED json-c)
+      target_link_libraries( <TARGET> ${JSONC_LIBRARIES})
+      target_include_directories( <TARGET> PUBLIC ${JSONC_INCLUDE_DIRS})
+      target_compile_options( <TARGET> PUBLIC ${JSONC_CFLAGS_OTHER})
+  
 * Link libjapi
-  ```cmake
-  get_filename_component(LIBJAPI_LIB_DIR contrib/libjapi/lib/ ABSOLUTE)
-  FIND_LIBRARY(LIBJAPI_LIBRARIES NAMES japi PATHS ${LIBJAPI_LIB_DIR})
-  get_filename_component(LIBJAPI_INCLUDE_DIRS contrib/libjapi/include/ ABSOLUTE)
-  target_link_libraries( <TARGET> ${LIBJAPI_LIBRARIES})
-  target_include_directories( <TARGET> PUBLIC ${LIBJAPI_INCLUDE_DIRS})
-  target_compile_options( <TARGET> PUBLIC ${LIBJAPI_CFLAGS_OTHER})
-  ```
+
+      get_filename_component(LIBJAPI_LIB_DIR contrib/libjapi/lib/ ABSOLUTE)
+      FIND_LIBRARY(LIBJAPI_LIBRARIES NAMES japi PATHS ${LIBJAPI_LIB_DIR})
+      get_filename_component(LIBJAPI_INCLUDE_DIRS contrib/libjapi/include/ ABSOLUTE)
+      target_link_libraries( <TARGET> ${LIBJAPI_LIBRARIES})
+      target_include_directories( <TARGET> PUBLIC ${LIBJAPI_INCLUDE_DIRS})
+      target_compile_options( <TARGET> PUBLIC ${LIBJAPI_CFLAGS_OTHER})
+    
 * json-c is linked to compile but it might be required to start the application to add /usr/local/lib to the LD_LIBRARY_PATH
-  ```
-  export LD_LIBRARY_PATH:/usr/local/lib
-  ```
+
+      export LD_LIBRARY_PATH:/usr/local/lib
 
 ### Examples
 
 #### Server example
 
-```c
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h> /* sleep */
+    #include <assert.h>
+    #include <stdio.h>
+    #include <string.h>
+    #include <unistd.h> /* sleep */
 
-#include <japi.h>
-#include <japi_pushsrv.h>
-#include <japi_utils.h>
+    #include <japi.h>
+    #include <japi_pushsrv.h>
+    #include <japi_utils.h>
 
-/* User defined push service routine */
-int push_counter(japi_pushsrv_context *psc)
-{
-        json_object *jmsg;
-        int i;
+    /* User defined push service routine */
+    int push_counter(japi_pushsrv_context *psc)
+    {
+            json_object *jmsg;
+            int i;
 
-        assert(psc != NULL);
+            assert(psc != NULL);
 
-        i = 0;
-        jmsg = json_object_new_object();
+            i = 0;
+            jmsg = json_object_new_object();
 
-        while (psc->enabled) {
-                /* Create JSON response string */
-                json_object_object_add(jmsg,"counter",json_object_new_int(i));
+            while (psc->enabled) {
+                    /* Create JSON response string */
+                    json_object_object_add(jmsg,"counter",json_object_new_int(i));
 
-                /* Push message */
-                japi_pushsrv_sendmsg(psc,jmsg);
+                    /* Push message */
+                    japi_pushsrv_sendmsg(psc,jmsg);
 
-                i++;
-                sleep(1);
-        }
-        json_object_put(jmsg);
+                    i++;
+                    sleep(1);
+            }
+            json_object_put(jmsg);
 
-        return 0;
-}
+            return 0;
+    }
 
-static void rnf_handler(japi_context *ctx, json_object *request, json_object *response)
-{
-        json_object_object_add(response, "japi_response_msg", json_object_new_string("ERROR: No request handler found!"));
-}
+    static void rnf_handler(japi_context *ctx, json_object *request, json_object *response)
+    {
+            json_object_object_add(response, "japi_response_msg", json_object_new_string("ERROR: No request handler found!"));
+    }
 
-static void get_temperature(japi_context *ctx, json_object *request, json_object *response)
-{
-        double temperature;
-        const char *unit;
+    static void get_temperature(japi_context *ctx, json_object *request, json_object *response)
+    {
+            double temperature;
+            const char *unit;
 
-        /*
-         * TODO: Read the temperature from a sensor...
-         */
-        temperature = 27.0;
+            /*
+            * TODO: Read the temperature from a sensor...
+            */
+            temperature = 27.0;
 
-        /* Provide the temperature in KELVIN (if requested)
-         * or CELSIUS (default) */
-        unit = japi_get_value_as_str(request, "unit");
-        if (unit != NULL && strcmp(unit, "kelvin") == 0) {
-                temperature += 273;
-        } else {
-                unit = "celsius";
-        }
+            /* Provide the temperature in KELVIN (if requested)
+            * or CELSIUS (default) */
+            unit = japi_get_value_as_str(request, "unit");
+            if (unit != NULL && strcmp(unit, "kelvin") == 0) {
+                    temperature += 273;
+            } else {
+                    unit = "celsius";
+            }
 
-        /* Prepare and provide response */
-        json_object_object_add(response, "temperature", json_object_new_double(temperature));
-        json_object_object_add(response, "unit", json_object_new_string(unit));
-}
+            /* Prepare and provide response */
+            json_object_object_add(response, "temperature", json_object_new_double(temperature));
+            json_object_object_add(response, "unit", json_object_new_string(unit));
+    }
 
-int main(int argc, char *argv[])
-{
-        int ret;
-        japi_context *ctx;
-        japi_pushsrv_context *psc_counter;
+    int main(int argc, char *argv[])
+    {
+            int ret;
+            japi_context *ctx;
+            japi_pushsrv_context *psc_counter;
 
-        /* Read port */
-        if (argc != 2) {
-                fprintf(stderr, "ERROR: Missing argument or wrong amount of arguments.\n" \
-                                "Usage:\n\t%s <port>\n", argv[0]);
-                return -1;
-        }
+            /* Read port */
+            if (argc != 2) {
+                    fprintf(stderr, "ERROR: Missing argument or wrong amount of arguments.\n" \
+                                    "Usage:\n\t%s <port>\n", argv[0]);
+                    return -1;
+            }
 
-        /* Create JSON API context */
-        ctx = japi_init(NULL);
-        if (ctx == NULL) {
-                fprintf(stderr, "ERROR: Failed to create japi context\n");
-                return -1;
-        }
+            /* Create JSON API context */
+            ctx = japi_init(NULL);
+            if (ctx == NULL) {
+                    fprintf(stderr, "ERROR: Failed to create japi context\n");
+                    return -1;
+            }
 
-        /* Register JSON API request */
-        japi_register_request(ctx, "get_temperature", &get_temperature);
+            /* Register JSON API request */
+            japi_register_request(ctx, "get_temperature", &get_temperature);
 
-        /* Register push service */
-        psc_counter = japi_pushsrv_register(ctx, "push_counter");
+            /* Register push service */
+            psc_counter = japi_pushsrv_register(ctx, "push_counter");
 
-        /* Start push thread */
-        japi_pushsrv_start(psc_counter,&push_counter);
+            /* Start push thread */
+            japi_pushsrv_start(psc_counter,&push_counter);
 
-        /* Provide JSON API interface via TCP */
-        ret = japi_start_server(ctx, argv[1]);
+            /* Provide JSON API interface via TCP */
+            ret = japi_start_server(ctx, argv[1]);
 
-        /* Wait for the thread to finish */
-        japi_pushsrv_stop(psc_counter);
+            /* Wait for the thread to finish */
+            japi_pushsrv_stop(psc_counter);
 
-        /* Destroy JAPI context */
-        japi_destroy(ctx);
+            /* Destroy JAPI context */
+            japi_destroy(ctx);
 
-        return ret;
-}
-```
+            return ret;
+    }
+
 #### Client JSON request examples
-```py
-{
-  "japi_request": "get_temperature",
-  "args": {
-	"unit": "kelvin"
-  }
-}
 
-{
-  "japi_request": "japi_pushsrv_list",
-}
+    {
+      "japi_request": "get_temperature",
+      "args": {
+      "unit": "kelvin"
+      }
+    }
 
-{
-  "japi_request": "japi_pushsrv_subscribe",
-  "args": {
-	"service": "push_counter"
-  }
-}
+    {
+      "japi_request": "japi_pushsrv_list",
+    }
 
-{
-  "japi_request": "japi_pushsrv_unsubscribe",
-  "args": {
-	"service": "push_counter"
-  }
-}
-```
+    {
+      "japi_request": "japi_pushsrv_subscribe",
+      "args": {
+      "service": "push_counter"
+      }
+    }
+
+    {
+      "japi_request": "japi_pushsrv_unsubscribe",
+      "args": {
+      "service": "push_counter"
+      }
+    }
 
 ## References
 * https://github.com/json-c/json-c
