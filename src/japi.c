@@ -81,17 +81,18 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 	assert(response != NULL);
 	assert(socket != -1);
 
-	ret = -1;
-	*response = NULL;
-	jresp = json_object_new_object(); /* Response object */
-	jresp_data = json_object_new_object();
-
 	/* Create JSON object from received message */
 	jreq = json_tokener_parse(request);
 	if (jreq == NULL) {
 		fprintf(stderr, "ERROR: json_tokener_parse() failed. Received message: %s\n", request);
 		return -1;
 	}
+
+	ret = -1;
+	*response = NULL;
+	jresp = json_object_new_object(); /* Response object */
+	jresp_data = json_object_new_object();
+
 
 	if ((japi_get_value_as_str(jreq, "japi_request", &req_name)) == 0) {
 
