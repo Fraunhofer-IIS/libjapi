@@ -509,7 +509,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 
 						/* Received a line, process it... */
 						japi_process_message(ctx, request, &response, client->socket);
-
+						free(request);
 						/* Send response (if provided) */
 						if (response != NULL) {
 							ret = write_n(client->socket, response, strlen(response));
@@ -519,6 +519,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 								/* Write failed */
 								fprintf(stderr, "ERROR: Failed to send response to client %i (write returned %i)\n",client->socket, ret);
 								japi_remove_client(ctx,client->socket);
+								break;
 							}
 						}
 					} else if (ret == 0) {
@@ -526,14 +527,17 @@ int japi_start_server(japi_context *ctx, const char *port)
 							/* Received EOF (client disconnected) */
 							prntdbg("client %d disconnected\n",client->socket);
 							japi_remove_client(ctx,client->socket);
+							break;
 						} else {
 							/* Received an empty line */
+							free(request);
 						}
 					} else {
 						fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
 						japi_remove_client(ctx,client->socket);
+						break;
 					}
-					free(request);
+					
 
 				} while (client->crl_buffer.nbytes != 0);
 			}
