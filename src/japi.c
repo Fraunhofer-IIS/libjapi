@@ -87,9 +87,10 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 		fprintf(stderr, "ERROR: json_tokener_parse() failed. Received message: %s\n", request);
 		return -1;
 	}
-
+	
 	ret = -1;
 	*response = NULL;
+	/* Only create the new JSON objects after a valid Json object was parsed. */
 	jresp = json_object_new_object(); /* Response object */
 	jresp_data = json_object_new_object();
 
@@ -510,7 +511,11 @@ int japi_start_server(japi_context *ctx, const char *port)
 
 						/* Received a line, process it... */
 						japi_process_message(ctx, request, &response, client->socket);
-						free(request);
+
+						/* After the request buffer is processed, the memory
+						 *is not needed anymore and can be freed at this point. */
+						free(request); 
+						
 						/* Send response (if provided) */
 						if (response != NULL) {
 							ret = write_n(client->socket, response, strlen(response));
