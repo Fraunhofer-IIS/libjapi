@@ -2,10 +2,15 @@ next
 =====
 * ...
 
-0.3.1
+0.3.2
 =====
 * Seperated doc in overview and details
-* Using README as frontpage, removed duplicated content
+* Using README as doxygen frontpage, removed duplicated content
+* Fixed invalid memory access after a client disconnects
+
+0.3.1
+=====
+* Implemented dedicated buffers for each client connection
 
 0.3.0
 =====

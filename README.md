@@ -9,7 +9,7 @@ which push custom JSON messages to the clients subscribed to them.
 The documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
 
 ## Packages
-The packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
+Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
 
 ## Features
 * Push services
