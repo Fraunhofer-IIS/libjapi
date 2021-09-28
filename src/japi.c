@@ -81,6 +81,9 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 	assert(response != NULL);
 	assert(socket != -1);
 
+	ret = -1;
+	*response = NULL;
+
 	/* Create JSON object from received message */
 	jreq = json_tokener_parse(request);
 	if (jreq == NULL) {
@@ -88,9 +91,7 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 		return -1;
 	}
 	
-	ret = -1;
-	*response = NULL;
-	/* Only create the new JSON objects after a valid Json object was parsed. */
+	/* Only create new JSON objects after a valid JSON request was parsed. */
 	jresp = json_object_new_object(); /* Response object */
 	jresp_data = json_object_new_object();
 
@@ -543,7 +544,6 @@ int japi_start_server(japi_context *ctx, const char *port)
 						japi_remove_client(ctx,client->socket);
 						break;
 					}
-					
 
 				} while (client->crl_buffer.nbytes != 0);
 			}
