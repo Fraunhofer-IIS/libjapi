@@ -83,8 +83,6 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 
 	ret = -1;
 	*response = NULL;
-	jresp = json_object_new_object(); /* Response object */
-	jresp_data = json_object_new_object();
 
 	/* Create JSON object from received message */
 	jreq = json_tokener_parse(request);
@@ -92,6 +90,11 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 		fprintf(stderr, "ERROR: json_tokener_parse() failed. Received message: %s\n", request);
 		return -1;
 	}
+	
+	/* Only create new JSON objects after a valid JSON request was parsed. */
+	jresp = json_object_new_object(); /* Response object */
+	jresp_data = json_object_new_object();
+
 
 	if ((japi_get_value_as_str(jreq, "japi_request", &req_name)) == 0) {
 
@@ -510,6 +513,10 @@ int japi_start_server(japi_context *ctx, const char *port)
 						/* Received a line, process it... */
 						japi_process_message(ctx, request, &response, client->socket);
 
+						/* After the request buffer is processed, the memory
+						 *is not needed anymore and can be freed at this point. */
+						free(request); 
+						
 						/* Send response (if provided) */
 						if (response != NULL) {
 							ret = write_n(client->socket, response, strlen(response));
@@ -519,6 +526,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 								/* Write failed */
 								fprintf(stderr, "ERROR: Failed to send response to client %i (write returned %i)\n",client->socket, ret);
 								japi_remove_client(ctx,client->socket);
+								break;
 							}
 						}
 					} else if (ret == 0) {
@@ -526,14 +534,16 @@ int japi_start_server(japi_context *ctx, const char *port)
 							/* Received EOF (client disconnected) */
 							prntdbg("client %d disconnected\n",client->socket);
 							japi_remove_client(ctx,client->socket);
+							break;
 						} else {
 							/* Received an empty line */
+							free(request);
 						}
 					} else {
 						fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
 						japi_remove_client(ctx,client->socket);
+						break;
 					}
-					free(request);
 
 				} while (client->crl_buffer.nbytes != 0);
 			}
