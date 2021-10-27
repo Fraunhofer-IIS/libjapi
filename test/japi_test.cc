@@ -34,7 +34,7 @@ TEST(JAPI,GetValueAsX)
 
 	jresp = json_object_new_object();
 	json_object_object_add(jresp,"string",json_object_new_string("value"));
-	json_object_object_add(jresp,"bool",json_object_new_boolean(TRUE));
+	json_object_object_add(jresp,"bool",json_object_new_boolean(true));
 	json_object_object_add(jresp,"int",json_object_new_int(10));
 	json_object_object_add(jresp,"int64",json_object_new_int64(9000000000000000000));
 	json_object_object_add(jresp,"double",json_object_new_double(10.12345));
