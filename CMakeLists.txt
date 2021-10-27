@@ -37,6 +37,7 @@ set_target_properties(japi PROPERTIES
   SOVERSION ${SOVERSION})
 
 target_link_libraries(japi PkgConfig::JSONC)
+target_link_libraries(japi-static PkgConfig::JSONC)
 
 # only install libjapi.so because the static version is usually linked directly
 # from the build directory
