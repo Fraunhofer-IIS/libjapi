@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.6)
 
 project(libjapi VERSION 0.3)
 set(SOVERSION 1)
@@ -20,7 +20,7 @@ file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 
 # configure libraries
 find_package(PkgConfig)
-pkg_search_module(JSONC REQUIRED json-c)
+pkg_search_module(JSONC REQUIRED IMPORTED_TARGET json-c)
 
 # create an object lib to avoid double compilation
 add_library(japi_objs OBJECT ${SOURCES} ${HEADERS})
@@ -35,6 +35,9 @@ add_library(japi-static STATIC $<TARGET_OBJECTS:japi_objs>)
 set_target_properties(japi PROPERTIES
   PUBLIC_HEADER "${PUBLIC_HEADERS}"
   SOVERSION ${SOVERSION})
+
+target_link_libraries(japi PkgConfig::JSONC)
+target_link_libraries(japi-static PkgConfig::JSONC)
 
 # only install libjapi.so because the static version is usually linked directly
 # from the build directory
@@ -74,7 +77,7 @@ target_compile_options(testsuite PUBLIC "-pthread")
 
 target_link_libraries(testsuite
   gtest_main
-  japi-static json-c
+  japi
 )
 
 target_include_directories(testsuite
