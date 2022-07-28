@@ -1,9 +1,10 @@
 # libjapi
 
-libjapi is a universal JSON API library. It receives newline-delimited JSON
-(NDJSON) messages via TCP and calls registered C functions. A JSON response is
-returned for each request. Furthermore, it is also possible to create push services,
-which push custom JSON messages to the clients subscribed to them.
+libjapi is a universal JSON to C API library. It receives newline-delimited
+JSON (NDJSON) messages via TCP and calls registered C functions. A JSON
+response is returned for each request. Furthermore, it is also possible to
+create push services, which asynchronously push JSON messages to the clients
+subscribed to them.
 
 ## Documentation
 The documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
@@ -12,17 +13,18 @@ The documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software
 Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
 
 ## Features
-* Push services
+* Synchronous communication (request, response)
+* Asynchronous communication (register, push)
 * Multi-client support
 
 ## Getting started
 
 ### Prerequisites
 * [json-c](https://github.com/json-c/json-c)
-* [cmake version 3.5](https://cmake.org/)
+* [cmake version 3.6](https://cmake.org/)
 
 ### Installation
-Run *cmake* in the libjapi repository.
+Create a build directory and call *cmake* in that directory.
 
     $ mkdir build
     $ cd build/
@@ -32,49 +34,21 @@ A Makefile is generated. Run 'make' to build the libjapi libraries.
 
     $ make
 
-The shared and static libraries are to be found in the directory 'make' was run.
+A shared and a static library is built.
 
 ## Demo
 You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/libjapi-demo), with examples for all features from the repository listed below:
 
     $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi-demo.git
 
-## Usage
+## Usage & Examples
 * Create a JAPI context
 * Write application specific functions
 * Register these application specific functions to libjapi
 * Start a JAPI server
 * Enjoy the flexibility
 
-## Integration into Cmake
-* The package 'pkg-config' needs to be installed for the libjapi CMake file to check for prerequisites.
-* add "-pthread" flag to compiler options
-
-      set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -pthread")
-  
-* Link json-c
-
-      pkg_search_module(JSONC REQUIRED json-c)
-      target_link_libraries( <TARGET> ${JSONC_LIBRARIES})
-      target_include_directories( <TARGET> PUBLIC ${JSONC_INCLUDE_DIRS})
-      target_compile_options( <TARGET> PUBLIC ${JSONC_CFLAGS_OTHER})
-  
-* Link libjapi
-
-      get_filename_component(LIBJAPI_LIB_DIR contrib/libjapi/lib/ ABSOLUTE)
-      FIND_LIBRARY(LIBJAPI_LIBRARIES NAMES japi PATHS ${LIBJAPI_LIB_DIR})
-      get_filename_component(LIBJAPI_INCLUDE_DIRS contrib/libjapi/include/ ABSOLUTE)
-      target_link_libraries( <TARGET> ${LIBJAPI_LIBRARIES})
-      target_include_directories( <TARGET> PUBLIC ${LIBJAPI_INCLUDE_DIRS})
-      target_compile_options( <TARGET> PUBLIC ${LIBJAPI_CFLAGS_OTHER})
-    
-* json-c is linked to compile but it might be required to start the application to add /usr/local/lib to the LD_LIBRARY_PATH
-
-      export LD_LIBRARY_PATH:/usr/local/lib
-
-### Examples
-
-#### Server example
+### Server example
 
     #include <assert.h>
     #include <stdio.h>
@@ -181,7 +155,7 @@ You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/lib
             return ret;
     }
 
-#### Client JSON request examples
+### Client JSON request examples
 
     {
       "japi_request": "get_temperature",
@@ -208,8 +182,3 @@ You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/lib
       }
     }
 
-## References
-* https://github.com/json-c/json-c
-* http://json-c.github.io/json-c/
-* https://en.wikipedia.org/wiki/JSON
-* https://alan-mushi.github.io/2014/10/28/json-c-tutorial-part-1.html
