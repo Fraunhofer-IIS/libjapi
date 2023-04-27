@@ -1,4 +1,5 @@
 #!/bin/sh
+# Copyright (c) 2023 Fraunhofer IIS
 
 set -e
 

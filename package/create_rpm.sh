@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (c) 2023 Fraunhofer IIS
 
 ###---------------------------------------------------
 # 0. change to target directory and cleanup environment
