@@ -182,3 +182,6 @@ You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/lib
       }
     }
 
+## License
+
+Copyright (c) 2023 Fraunhofer IIS. Released under the [MIT License](COPYING).
