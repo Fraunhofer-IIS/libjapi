@@ -77,6 +77,8 @@ int tcp4_start_server(const char* port);
  */
 int tcp6_start_server(const char* port);
 
+int enable_tcp_keepalive(int socket_file_descriptor);
+
 #ifdef __cplusplus
 }
 #endif

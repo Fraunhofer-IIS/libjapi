@@ -462,6 +462,11 @@ int japi_start_server(japi_context *ctx, const char *port)
 		return -1;
 	}
 
+	/* TODO make optional */
+	if (enable_tcp_keepalive(server_socket) < 0){
+		return -1;
+	}
+
 	int ret;
 	int nfds;
 	fd_set fdrd;

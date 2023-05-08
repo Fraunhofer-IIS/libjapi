@@ -33,7 +33,6 @@
 
 #include <netinet/tcp.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -87,39 +86,6 @@ static int tcp_start_server_on_addr_family(const char* port, int ai_family)
 			/* The programm can go on. */
 		};
 
-		/* TODO make optional */
-		if (1){
-			int yes = 1; /* Set SO_KEEPALIVE to 1(True) */
-			if (setsockopt(sfd, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(yes)) == -1)
-			{
-				perror("ERROR: setsocktop SO_KEEPALIVE");
-				fprintf(stderr, "WARNING: Keeping connection alive wont be possible. \n");
-				/* The programm can go on. */
-			};
-
-			/* TODO change defaults tcp_keepalive_time = 7200, tcp_keepalive_intvl = 75, tcp_keepalive_probes = 9 */
-			int keepidle = 60; // 1 minute
-			if (setsockopt(sfd, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(keepidle)) == -1)
-			{
-				perror("setsockopt TCP_KEEPIDLE");
-				exit(1);
-			}
-
-			int keepintvl = 10; // 10 seconds
-			if (setsockopt(sfd, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(keepintvl)) == -1)
-			{
-				perror("setsockopt TCP_KEEPINTVL");
-				exit(1);
-			}
-
-			int keepcnt = 6; // 3 probes
-			if (setsockopt(sfd, IPPROTO_TCP, TCP_KEEPCNT, &keepcnt, sizeof(keepcnt)) == -1)
-			{
-				perror("setsockopt TCP_KEEPCNT");
-				exit(1);
-			}
-		}
-
 		if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == 0)
 			break;                  /* Success */
 	
@@ -151,3 +117,36 @@ int tcp6_start_server(const char* port)
 	return tcp_start_server_on_addr_family(port, AF_INET6);
 }
 
+int enable_tcp_keepalive(int socket_file_descriptor)
+{
+	int yes = 1; /* Set SO_KEEPALIVE to 1(True) */
+	if (setsockopt(socket_file_descriptor, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(yes)) == -1)
+	{
+		perror("ERROR: setsocktop SO_KEEPALIVE");
+		fprintf(stderr, "WARNING: Keeping connection alive wont be possible. \n");
+		/* The programm can go on. */
+	};
+
+	/* change defaults from tcp_keepalive_time = 7200, tcp_keepalive_intvl = 75, tcp_keepalive_probes = 9 */
+	int keepidle = 60; // 1 minute
+	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(keepidle)) == -1)
+	{
+		perror("setsockopt TCP_KEEPIDLE");
+		return -1;
+	}
+
+	int keepintvl = 10; // 10 seconds
+	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(keepintvl)) == -1)
+	{
+		perror("setsockopt TCP_KEEPINTVL");
+		return -1;
+	}
+
+	int keepcnt = 6; // 3 probes
+	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPCNT, &keepcnt, sizeof(keepcnt)) == -1)
+	{
+		perror("setsockopt TCP_KEEPCNT");
+		return -1;
+	}
+	return 0;
+}
