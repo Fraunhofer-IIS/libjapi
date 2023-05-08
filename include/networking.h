@@ -77,6 +77,16 @@ int tcp4_start_server(const char* port);
  */
 int tcp6_start_server(const char* port);
 
+/*!
+ * \brief Set socket options to enable TCP keepalive functions
+ * 
+ * Change default values to ensure that lost connections are recognised and
+ * terminated.
+ * 
+ * \param socket_file_descriptor Socket to which the changes are applied.
+ * 
+ * \returns On success 0. On error -1.
+ */
 int enable_tcp_keepalive(int socket_file_descriptor);
 
 #ifdef __cplusplus
