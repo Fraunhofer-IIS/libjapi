@@ -172,7 +172,24 @@ int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
  */
 int japi_include_args_in_response(japi_context *ctx, bool include_args);
 
-/* TODO change defaults from tcp_keepalive_time = 7200, tcp_keepalive_intvl = 75, tcp_keepalive_probes = 9 */
+/*!
+ * \brief Enable or disable TCP keepalive and set the relevant parameters.
+ *
+ * Default values depend on the system. E.g. for Debian 11 `tcp_keepalive_time 
+ * = 7200`, `tcp_keepalive_intvl = 75`, `tcp_keepalive_probes = 9`
+ *
+ * \param ctx					JAPI context
+ * \param tcp_keepalive_enable	Switch to enable keepalive mechanism in TCP 
+ * 								server. Configure using following attributes
+ * \param tcp_keepalive_time	The number of seconds a connection needs to be
+ * 								idle before TCP begins sending out keep-alive probes.
+ * \param tcp_keepalive_intvl	The number of seconds between TCP keep-alive probes.
+ * \param tcp_keepalive_probes	The maximum number of TCP keep-alive probes to send
+ * 								before giving up and killing the connection if no
+ * 								response is obtained from the other end.
+ * 
+ * \returns On success, zero is returned. On invalid parameters, -1 is returned.
+ */
 int japi_set_tcp_keepalive(japi_context *ctx,
 						   int tcp_keepalive_enable,
 						   int tcp_keepalive_time,
