@@ -117,33 +117,37 @@ int tcp6_start_server(const char* port)
 	return tcp_start_server_on_addr_family(port, AF_INET6);
 }
 
-int enable_tcp_keepalive(int socket_file_descriptor)
+int enable_tcp_keepalive(int socket_file_descriptor,
+                        int tcp_keepalive_enable,
+                        int tcp_keepalive_time,
+                        int tcp_keepalive_intvl,
+                        int tcp_keepalive_probes)
 {
-	int yes = 1; /* Set SO_KEEPALIVE to 1(True) */
-	if (setsockopt(socket_file_descriptor, SOL_SOCKET, SO_KEEPALIVE, &yes, sizeof(yes)) == -1)
+	if (setsockopt(socket_file_descriptor, SOL_SOCKET, SO_KEEPALIVE, &tcp_keepalive_enable, sizeof(tcp_keepalive_enable)) == -1)
 	{
 		perror("ERROR: setsocktop SO_KEEPALIVE");
 		fprintf(stderr, "WARNING: Keeping connection alive wont be possible. \n");
 		/* The programm can go on. */
 	};
 
-	/* change defaults from tcp_keepalive_time = 7200, tcp_keepalive_intvl = 75, tcp_keepalive_probes = 9 */
-	int keepidle = 60; // 1 minute
-	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(keepidle)) == -1)
+	if (!tcp_keepalive_enable)
+	{
+		return 0;
+	}
+
+	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPIDLE, &tcp_keepalive_time, sizeof(tcp_keepalive_time)) == -1)
 	{
 		perror("setsockopt TCP_KEEPIDLE");
 		return -1;
 	}
 
-	int keepintvl = 10; // 10 seconds
-	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(keepintvl)) == -1)
+	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPINTVL, &tcp_keepalive_intvl, sizeof(tcp_keepalive_intvl)) == -1)
 	{
 		perror("setsockopt TCP_KEEPINTVL");
 		return -1;
 	}
 
-	int keepcnt = 6; // 3 probes
-	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPCNT, &keepcnt, sizeof(keepcnt)) == -1)
+	if (setsockopt(socket_file_descriptor, IPPROTO_TCP, TCP_KEEPCNT, &tcp_keepalive_probes, sizeof(tcp_keepalive_probes)) == -1)
 	{
 		perror("setsockopt TCP_KEEPCNT");
 		return -1;

@@ -52,6 +52,14 @@ typedef struct __japi_context {
 	void *userptr; /*!< Pointer to user data */
 	uint16_t num_clients; /*!< Number of connected clients */
 	uint16_t max_clients; /*!< Number of maximal allowed clients */
+	int tcp_keepalive_enable; /*!< Switch to enable keepalive mechanism in TCP server.
+								Configure using following attributes */
+	int tcp_keepalive_time;	  /*!< The number of seconds a connection needs to be idle before
+								TCP begins sending out keep-alive probes. */
+	int tcp_keepalive_intvl;  /*!< The number of seconds between TCP keep-alive probes. */
+	int tcp_keepalive_probes; /*!< The maximum number of TCP keep-alive probes to send before
+								giving up and killing the connection if no response is ob‐
+								tained from the other end. */
 	pthread_mutex_t lock; /*!< Mutual access lock */
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
 	struct __japi_pushsrv_context *push_services; /*!< Pointer to the JAPI push service list */
@@ -163,6 +171,13 @@ int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
  * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
  */
 int japi_include_args_in_response(japi_context *ctx, bool include_args);
+
+/* TODO change defaults from tcp_keepalive_time = 7200, tcp_keepalive_intvl = 75, tcp_keepalive_probes = 9 */
+int japi_set_tcp_keepalive(japi_context *ctx,
+						   int tcp_keepalive_enable,
+						   int tcp_keepalive_time,
+						   int tcp_keepalive_intvl,
+						   int tcp_keepalive_probes);
 
 /*!
  * \brief Shutdown the JAPI server

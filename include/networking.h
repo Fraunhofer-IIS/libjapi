@@ -87,7 +87,11 @@ int tcp6_start_server(const char* port);
  * 
  * \returns On success 0. On error -1.
  */
-int enable_tcp_keepalive(int socket_file_descriptor);
+int enable_tcp_keepalive(int socket_file_descriptor,
+                        int tcp_keepalive_enable,
+                        int tcp_keepalive_time,
+                        int tcp_keepalive_intvl,
+                        int tcp_keepalive_probes);
 
 #ifdef __cplusplus
 }

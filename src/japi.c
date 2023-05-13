@@ -288,6 +288,10 @@ japi_context* japi_init(void *userptr)
 	ctx->num_clients = 0;
 	ctx->max_clients = 0;
 	ctx->include_args_in_response = false;
+	ctx->tcp_keepalive_enable = 0;
+	ctx->tcp_keepalive_time = 7200;
+	ctx->tcp_keepalive_intvl = 75;
+	ctx->tcp_keepalive_probes = 9;
 	ctx->shutdown = false;
 
 	/* Initialize mutex */
@@ -336,6 +340,20 @@ int japi_include_args_in_response(japi_context *ctx, bool include_args)
 	ctx->include_args_in_response = include_args;
 
 	return 0;
+}
+
+/* change defaults from tcp_keepalive_time = 7200, tcp_keepalive_intvl = 75, tcp_keepalive_probes = 9 */
+int japi_set_tcp_keepalive(japi_context *ctx,
+						   int tcp_keepalive_enable,
+						   int tcp_keepalive_time,
+						   int tcp_keepalive_intvl,
+						   int tcp_keepalive_probes)
+{
+	// TODO Error handling
+	ctx->tcp_keepalive_enable = tcp_keepalive_enable;
+	ctx->tcp_keepalive_time = tcp_keepalive_time;
+	ctx->tcp_keepalive_intvl = tcp_keepalive_intvl;
+	ctx->tcp_keepalive_probes = tcp_keepalive_probes;
 }
 
 /*
@@ -462,9 +480,16 @@ int japi_start_server(japi_context *ctx, const char *port)
 		return -1;
 	}
 
-	/* TODO make optional */
-	if (enable_tcp_keepalive(server_socket) < 0){
-		return -1;
+	if (ctx->tcp_keepalive_enable)
+	{
+		if (enable_tcp_keepalive(server_socket,
+								 ctx->tcp_keepalive_enable,
+								 ctx->tcp_keepalive_time,
+								 ctx->tcp_keepalive_intvl,
+								 ctx->tcp_keepalive_probes) < 0)
+		{
+			return -1;
+		}
 	}
 
 	int ret;
