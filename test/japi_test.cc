@@ -463,11 +463,11 @@ TEST(JAPI, TcpKeepAliveSetup)
 	/* Activate keepalive in socket. Test different parameters */
 	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10, 6), 0);
 	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 0, 60, 10, 6), 0);
-	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10.7, 6), -1); // int only
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 0.999, 6), -1); // tcp_keepalive_intvl > 0, implicit type conversion
 	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, -60, 10, 0), -1);	// positive values only
 
 	/* Test if options are set correctly in context*/
-	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10, 6), 0);
+	ASSERT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10, 6), 0);
 	EXPECT_EQ(ctx->tcp_keepalive_enable, 1);
 	EXPECT_EQ(ctx->tcp_keepalive_time, 60);
 	EXPECT_EQ(ctx->tcp_keepalive_intvl, 10);
