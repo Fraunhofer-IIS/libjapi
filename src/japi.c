@@ -349,11 +349,29 @@ int japi_set_tcp_keepalive(japi_context *ctx,
 						   int tcp_keepalive_intvl,
 						   int tcp_keepalive_probes)
 {
-	// TODO Error handling
+	/* Error handling */
+	if (ctx == NULL) {
+		fprintf(stderr, "ERROR: JAPI context is NULL.\n");
+		return -1;
+	}
+	if (tcp_keepalive_time < 0) {
+		fprintf(stderr, "ERROR: tcp_keepalive_time has to be positive or 0.\n");
+		return -1;
+	}
+	if (tcp_keepalive_intvl <= 0) {
+		fprintf(stderr, "ERROR: tcp_keepalive_intvl has to be positive.\n");
+		return -1;
+	}
+	if (tcp_keepalive_probes < 0) {
+		fprintf(stderr, "ERROR: tcp_keepalive_probes has to be positive or 0.\n");
+		return -1;
+	}
+
 	ctx->tcp_keepalive_enable = tcp_keepalive_enable;
 	ctx->tcp_keepalive_time = tcp_keepalive_time;
 	ctx->tcp_keepalive_intvl = tcp_keepalive_intvl;
 	ctx->tcp_keepalive_probes = tcp_keepalive_probes;
+	return 0;
 }
 
 /*

@@ -22,6 +22,9 @@ Copyright (c) 2023 Fraunhofer IIS
 
 #include <gtest/gtest.h>
 #include <stdbool.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 
 extern "C"{
 #include <japi.h>
@@ -29,6 +32,7 @@ extern "C"{
 #include <japi_pushsrv_intern.h>
 #include <japi_pushsrv.h>
 #include <japi_utils.h>
+#include <networking.h>
 #include <rw_n.h>
 }
 
@@ -448,4 +452,46 @@ TEST(JAPI_Push_Service,PushServiceDestroy)
 
 	/* Pass bad push service context */
 	EXPECT_EQ(japi_pushsrv_destroy(NULL),-1);
+}
+
+TEST(JAPI, TcpKeepAliveSetup)
+{
+	japi_context *ctx;
+
+	ctx = japi_init(NULL);
+
+	/* Activate keepalive in socket. Test different parameters */
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10, 6), 0);
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 0, 60, 10, 6), 0);
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10.7, 6), -1); // int only
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, -60, 10, 0), -1);	// positive values only
+
+	/* Test if options are set correctly in context*/
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10, 6), 0);
+	EXPECT_EQ(ctx->tcp_keepalive_enable, 1);
+	EXPECT_EQ(ctx->tcp_keepalive_time, 60);
+	EXPECT_EQ(ctx->tcp_keepalive_intvl, 10);
+	EXPECT_EQ(ctx->tcp_keepalive_probes, 6);
+
+	/* Test if sockoptions are actually set */
+	int opt_val;
+    socklen_t opt_len = sizeof(opt_val);
+	int server_socket = tcp_start_server("1234");
+	ASSERT_EQ(enable_tcp_keepalive(server_socket,
+								 ctx->tcp_keepalive_enable,
+								 ctx->tcp_keepalive_time,
+								 ctx->tcp_keepalive_intvl,
+								 ctx->tcp_keepalive_probes), 0);
+
+    ASSERT_EQ(getsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, &opt_val, &opt_len), 0);
+	EXPECT_EQ(opt_val, 1);
+
+    ASSERT_EQ(getsockopt(server_socket, IPPROTO_TCP, TCP_KEEPIDLE, &opt_val, &opt_len), 0);
+	EXPECT_EQ(opt_val, 60);
+
+    ASSERT_EQ(getsockopt(server_socket, IPPROTO_TCP, TCP_KEEPINTVL, &opt_val, &opt_len), 0);
+	EXPECT_EQ(opt_val, 10);
+
+    ASSERT_EQ(getsockopt(server_socket, IPPROTO_TCP, TCP_KEEPCNT, &opt_val, &opt_len), 0);
+	EXPECT_EQ(opt_val, 6);
 }
