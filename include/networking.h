@@ -77,6 +77,30 @@ int tcp4_start_server(const char* port);
  */
 int tcp6_start_server(const char* port);
 
+/*!
+ * \brief Set socket options to enable TCP keepalive functions
+ * 
+ * Change default values to ensure that lost connections are recognised and
+ * terminated.
+ * 
+ * \param socket_file_descriptor Socket to which the changes are applied.
+ * \param tcp_keepalive_enable	Switch to enable keepalive mechanism in TCP 
+ * 								server. Configure using following attributes
+ * \param tcp_keepalive_time	The number of seconds a connection needs to be
+ * 								idle before TCP begins sending out keep-alive probes.
+ * \param tcp_keepalive_intvl	The number of seconds between TCP keep-alive probes.
+ * \param tcp_keepalive_probes	The maximum number of TCP keep-alive probes to send
+ * 								before giving up and killing the connection if no
+ * 								response is obtained from the other end.
+ * 
+ * \returns On success 0. On error -1.
+ */
+int enable_tcp_keepalive(int socket_file_descriptor,
+                        int tcp_keepalive_enable,
+                        int tcp_keepalive_time,
+                        int tcp_keepalive_intvl,
+                        int tcp_keepalive_probes);
+
 #ifdef __cplusplus
 }
 #endif
