@@ -64,7 +64,7 @@ typedef struct __japi_pushsrv_context {
 japi_pushsrv_context* japi_pushsrv_register(japi_context *ctx, const char *pushsrv_name);
 
 /*!
- * \brief Unsubscribes and frees memory space for all push service clients
+ * \brief DEPRECATED! Use `japi_pushsrv_deregister` instead.
  *
  * Iterates through push service clients and unsubscribes and frees memory.
  *
@@ -73,6 +73,22 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context *ctx, const char *pushs
  * \returns On success, 0 is returned. On error, -1 is returned.
  */
 int japi_pushsrv_destroy(japi_pushsrv_context *psc);
+
+
+/*!
+ * \brief Remove push service context from japi context, unsubscribe for all clients and free memory
+ * 
+ * Clean up the push service if no more needed:
+ * * remove entry from linked list in `ctx->push_services`
+ * * unsubscribe all clients and free their memory
+ * * stop the push service and free the used memory
+ *
+ * \param ctx		JAPI context
+ * \param to_remove	JAPI push service context which is to be removed
+ * 
+ * \returns On success, 0 is returned. On error, -1 is returned.
+ */
+void japi_pushsrv_deregister(japi_context *ctx, japi_pushsrv_context *to_remove);
 
 /*!
  * \brief Send messages to all subscribed clients

@@ -427,3 +427,34 @@ TEST(JAPI_Push_Service,PushServiceDestroy)
 	/* Pass bad push service context */
 	EXPECT_EQ(japi_pushsrv_destroy(NULL),-1);
 }
+
+TEST(JAPI_Push_Service,PushServiceRemoveEntryFromLInkedList)
+{
+	japi_context *ctx;
+	japi_pushsrv_context *psc01, *psc02, *psc05;
+	json_object *jobj;
+
+	ctx = japi_init(NULL);
+	jobj = json_object_new_object();
+
+	/* Register some test services, creates
+	{ "services": [ "test05", "test04", "test03", "test02", "test01" ] }
+	*/
+	psc01 = japi_pushsrv_register(ctx,"test01");
+	psc02 = japi_pushsrv_register(ctx,"test02");
+	japi_pushsrv_register(ctx,"test03");
+	japi_pushsrv_register(ctx,"test04");
+	psc05 = japi_pushsrv_register(ctx,"test05");
+
+	japi_pushsrv_deregister(ctx, psc02);
+	japi_pushsrv_list(ctx, NULL, jobj);
+	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test05\", \"test04\", \"test03\", \"test01\" ] }");
+
+	japi_pushsrv_deregister(ctx, psc05);
+	japi_pushsrv_list(ctx, NULL, jobj);
+	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test04\", \"test03\", \"test01\" ] }");
+
+	japi_pushsrv_deregister(ctx, psc01);
+	japi_pushsrv_list(ctx, NULL, jobj);
+	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test04\", \"test03\" ] }");
+}

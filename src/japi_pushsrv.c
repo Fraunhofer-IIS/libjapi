@@ -322,7 +322,7 @@ int japi_pushsrv_destroy(japi_pushsrv_context *psc)
 	japi_client *client, *client_next;
 
 	if (psc == NULL) {
-		fprintf(stderr,"ERROR: push service context is NULL");
+		fprintf(stderr,"ERROR: push service context is NULL\n");
 		return -1;
 	}
 
@@ -342,6 +342,44 @@ int japi_pushsrv_destroy(japi_pushsrv_context *psc)
 	pthread_mutex_destroy(&(psc->lock));
 	free_pushsrv(psc);
 
+	return 0;
+}
+
+/* 
+ * Remove push service context from japi context, unsubscribe for all clients and free memory
+ */
+void japi_pushsrv_deregister(japi_context *ctx, japi_pushsrv_context *to_remove)
+{
+	japi_pushsrv_context *psc, *psc_prev, *psc_next;
+	psc_prev = NULL;
+
+	if (ctx == NULL) {
+		fprintf(stderr,"ERROR: JAPI context is NULL.\n");
+		return -1;
+	}
+
+	if (to_remove == NULL) {
+		fprintf(stderr,"ERROR: push service context to remove is NULL\n");
+		return -1;
+	}
+
+	/* clean up linked list in ctx->push_service */
+	psc = ctx->push_services;
+	while (psc != NULL) {
+		psc_next = psc->next;
+		if (psc == to_remove) {
+			if (psc_prev == NULL) {
+				ctx->push_services = psc_next;
+			} else {
+				psc_prev->next = psc_next;
+			}
+			break;
+		}
+		psc_prev = psc;
+		psc = psc_next;
+	}
+
+	japi_pushsrv_destroy(to_remove);
 	return 0;
 }
 
