@@ -37,8 +37,6 @@
 #include <math.h>
 #include <unistd.h> /* sleep */
 
-/* Include libjapi. If not installed as package, use quotes here to access local
-files: `#include "japi.h"` */
 #include "japi.h"
 #include "japi_pushsrv.h"
 #include "japi_utils.h"
