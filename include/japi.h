@@ -35,9 +35,10 @@
 #define __JAPI_H__
 
 #include <json-c/json.h>
-#include <creadline.h>
 #include <pthread.h>
 #include <stdbool.h>
+
+#include "creadline.h"
 
 #ifdef __cplusplus
 extern "C" {
