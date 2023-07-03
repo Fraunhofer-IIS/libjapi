@@ -39,9 +39,9 @@
 
 /* Include libjapi. If not installed as package, use quotes here to access local
 files: `#include "japi.h"` */
-#include <japi.h>
-#include <japi_pushsrv.h>
-#include <japi_utils.h>
+#include "japi.h"
+#include "japi_pushsrv.h"
+#include "japi_utils.h"
 
 /* Create a resource structure to pass to libjapi*/
 typedef struct resources
