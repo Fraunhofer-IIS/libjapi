@@ -421,11 +421,12 @@ TEST(JAPI_Push_Service,PushServiceDestroy)
 	psc_status = japi_pushsrv_register(ctx,"pushsrv_temperature");
 
 	/* Destroy push services */
-	EXPECT_EQ(japi_pushsrv_destroy(psc_status),0);
-	EXPECT_EQ(japi_pushsrv_destroy(psc_temperature),0);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, psc_status),0);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, psc_temperature),0);
 
 	/* Pass bad push service context */
-	EXPECT_EQ(japi_pushsrv_destroy(NULL),-1);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, NULL),-1);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, psc_temperature),-1);
 }
 
 TEST(JAPI_Push_Service,PushServiceRemoveEntryFromLInkedList)
@@ -446,15 +447,15 @@ TEST(JAPI_Push_Service,PushServiceRemoveEntryFromLInkedList)
 	japi_pushsrv_register(ctx,"test04");
 	psc05 = japi_pushsrv_register(ctx,"test05");
 
-	japi_pushsrv_deregister(ctx, psc02);
+	japi_pushsrv_destroy(ctx, psc02);
 	japi_pushsrv_list(ctx, NULL, jobj);
 	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test05\", \"test04\", \"test03\", \"test01\" ] }");
 
-	japi_pushsrv_deregister(ctx, psc05);
+	japi_pushsrv_destroy(ctx, psc05);
 	japi_pushsrv_list(ctx, NULL, jobj);
 	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test04\", \"test03\", \"test01\" ] }");
 
-	japi_pushsrv_deregister(ctx, psc01);
+	japi_pushsrv_destroy(ctx, psc01);
 	japi_pushsrv_list(ctx, NULL, jobj);
 	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test04\", \"test03\" ] }");
 }

@@ -256,6 +256,7 @@ static void free_pushsrv(japi_pushsrv_context *psc)
 {
 	free(psc->pushsrv_name);
 	free(psc);
+	psc = NULL;
 }
 
 /*
@@ -314,21 +315,42 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context* ctx, const char* pushs
 	return psc;
 }
 
-/*
- * Iterate through push service and unsubscribe & free memory for all clients
+/* 
+ * Remove push service context from japi context, unsubscribe for all clients and free memory
  */
-int japi_pushsrv_destroy(japi_pushsrv_context *psc)
+int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc)
 {
+	japi_pushsrv_context *psc_iter, *psc_prev, *psc_next;
 	japi_client *client, *client_next;
+
+	assert(ctx != NULL);
 
 	if (psc == NULL) {
 		fprintf(stderr,"ERROR: push service context is NULL\n");
 		return -1;
 	}
 
-	client = psc->clients;
+	/* clean up linked list in ctx->push_service */
+	psc_prev = NULL;
+	psc_iter = ctx->push_services;
+
+	while (psc_iter != NULL) {
+		psc_next = psc_iter->next;
+		if (psc_iter == psc) {
+			/* If first element */
+			if (psc_prev == NULL) {
+				ctx->push_services = psc_next;
+			} else {
+				psc_prev->next = psc_next;
+			}
+			break;
+		}
+		psc_prev = psc_iter;
+		psc_iter = psc_next;
+	}
 
 	/* Iterates through push service client list and frees memory for every element and for the push service themself */
+	client = psc->clients;
 	pthread_mutex_lock(&(psc->lock));
 	while (client != NULL) {
 		client_next = client->next;
@@ -342,44 +364,6 @@ int japi_pushsrv_destroy(japi_pushsrv_context *psc)
 	pthread_mutex_destroy(&(psc->lock));
 	free_pushsrv(psc);
 
-	return 0;
-}
-
-/* 
- * Remove push service context from japi context, unsubscribe for all clients and free memory
- */
-void japi_pushsrv_deregister(japi_context *ctx, japi_pushsrv_context *to_remove)
-{
-	japi_pushsrv_context *psc, *psc_prev, *psc_next;
-	psc_prev = NULL;
-
-	if (ctx == NULL) {
-		fprintf(stderr,"ERROR: JAPI context is NULL.\n");
-		return -1;
-	}
-
-	if (to_remove == NULL) {
-		fprintf(stderr,"ERROR: push service context to remove is NULL\n");
-		return -1;
-	}
-
-	/* clean up linked list in ctx->push_service */
-	psc = ctx->push_services;
-	while (psc != NULL) {
-		psc_next = psc->next;
-		if (psc == to_remove) {
-			if (psc_prev == NULL) {
-				ctx->push_services = psc_next;
-			} else {
-				psc_prev->next = psc_next;
-			}
-			break;
-		}
-		psc_prev = psc;
-		psc = psc_next;
-	}
-
-	japi_pushsrv_destroy(to_remove);
 	return 0;
 }
 

@@ -204,7 +204,7 @@ int japi_destroy(japi_context *ctx)
 	psc = ctx->push_services;
 	while (psc != NULL) {
 		psc_next = psc->next;
-		japi_pushsrv_destroy(psc);
+		japi_pushsrv_destroy(ctx, psc);
 		psc = psc_next;
 	}
 
