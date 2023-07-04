@@ -138,31 +138,28 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 			}
 		}
 
-		/* Look for subscribe/unsubscribe service and add/remove client socket if found */
-		if (strcasecmp(req_name,"japi_pushsrv_subscribe") == 0) {
-			japi_pushsrv_subscribe(ctx,socket,jargs,jresp_data);
-		} else if (strcasecmp(req_name,"japi_pushsrv_unsubscribe") == 0) {
-			japi_pushsrv_unsubscribe(ctx,socket,jargs,jresp_data);
-		} else {
-
-			/* Try to find a suitable handler for the given request */
-			req_handler = japi_get_request_handler(ctx, req_name);
-			if (req_handler == NULL) {
-
-				/* No request handler found? Check if a fallback handler was registered. */
-				req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
-
-				if (req_handler == NULL) {
-					fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
-					goto out_free;
-				} else {
-					fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
-				}
-			}
-			
-			/* Call request handler */
-			req_handler(ctx, jargs, jresp_data);
+		/* Subscribe/unsubscribe service needs client socket */
+		if (strcasecmp(req_name,"japi_pushsrv_subscribe") == 0 || strcasecmp(req_name,"japi_pushsrv_unsubscribe") == 0) {
+			json_object_object_add(jargs, "socket", json_object_new_int(socket));
 		}
+
+		/* Try to find a suitable handler for the given request */
+		req_handler = japi_get_request_handler(ctx, req_name);
+		if (req_handler == NULL) {
+
+			/* No request handler found? Check if a fallback handler was registered. */
+			req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
+
+			if (req_handler == NULL) {
+				fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
+				goto out_free;
+			} else {
+				fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
+			}
+		}
+		
+		/* Call request handler */
+		req_handler(ctx, jargs, jresp_data);
 
 	} else {
 		/* Get request name */
@@ -298,8 +295,12 @@ japi_context* japi_init(void *userptr)
  	/* Ignore SIGPIPE Signal */
 	signal(SIGPIPE, SIG_IGN);
 
+	/* Register subscribe/unsubscribe service function */
+	japi_register_request(ctx, "japi_pushsrv_subscribe", &japi_pushsrv_subscribe);
+	japi_register_request(ctx, "japi_pushsrv_unsubscribe", &japi_pushsrv_unsubscribe);
 	/* Register list_push_service function  */
 	japi_register_request(ctx, "japi_pushsrv_list", &japi_pushsrv_list);
+	japi_register_request(ctx, "japi_cmd_list", &japi_cmd_list);
 
 	return ctx;
 }
@@ -590,4 +591,30 @@ int japi_start_server(japi_context *ctx, const char *port)
 	close(server_socket);
 
 	return 0;
+}
+
+/*
+ * Provide the names of all registered commands as a JAPI response.
+ */
+void japi_cmd_list(japi_context *ctx, json_object *request, json_object *response)
+{
+	japi_request *req;
+	json_object *jstring;
+	json_object *jarray;
+
+	assert(ctx != NULL);
+	assert(response != NULL);
+
+	jarray = json_object_new_array();
+	req = ctx->requests;
+
+	/* Iterate through push service list and return JSON object  */
+	while (req != NULL) {
+		jstring = json_object_new_string(req->name); /* Create JSON-string */
+		json_object_array_add(jarray, jstring); /* Add string to JSON array */
+		req = req->next;
+	}
+
+	/* Add array to JSON-object */
+	json_object_object_add(response, "commands", jarray);
 }

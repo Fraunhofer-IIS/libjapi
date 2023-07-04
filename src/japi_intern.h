@@ -115,4 +115,17 @@ int japi_add_client(japi_context *ctx, int socket);
 */
 void japi_pushsrv_remove_client_from_all_pushsrv(japi_context *ctx, int socket);
 
+/*!
+ * \brief Provide the names of all registered commands as a JAPI response.
+ *
+ * Provides the names of all registered commands as a JAPI response.
+ *
+ * \param ctx		JAPI context
+ * \param request 	Pointer to JAPI JSON request
+ * \param response	Pointer to JAPI JSON response
+ * \note Parameter 'request' declared, although not used in function.
+ * Function declaration needs to be identical to respective handler.
+ */
+void japi_cmd_list(japi_context *ctx, json_object *request, json_object *response);
+
 #endif /* __JAPI_INTERN_H__ */
