@@ -256,7 +256,6 @@ static void free_pushsrv(japi_pushsrv_context *psc)
 {
 	free(psc->pushsrv_name);
 	free(psc);
-	psc = NULL;
 }
 
 /*
@@ -328,6 +327,10 @@ int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc)
 	if (psc == NULL) {
 		fprintf(stderr,"ERROR: push service context is NULL\n");
 		return -1;
+	}
+	if (strcmp(psc->pushsrv_name, "") == 0) {
+		fprintf(stderr,"ERROR: push service context is empty\n");
+		return -2;
 	}
 
 	/* clean up linked list in ctx->push_service */

@@ -426,7 +426,7 @@ TEST(JAPI_Push_Service,PushServiceDestroy)
 
 	/* Pass bad push service context */
 	EXPECT_EQ(japi_pushsrv_destroy(ctx, NULL),-1);
-	EXPECT_EQ(japi_pushsrv_destroy(ctx, psc_temperature),-1);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, psc_temperature),-2);
 }
 
 TEST(JAPI_Push_Service,PushServiceRemoveEntryFromLInkedList)
