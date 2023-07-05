@@ -1,4 +1,5 @@
 #!/bin/sh
+# Copyright (c) 2023 Fraunhofer IIS
 
 # see https://git01.iis.fhg.de/ks-ip-lib/software/libjapi/container_registry
 

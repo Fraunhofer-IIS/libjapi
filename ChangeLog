@@ -1,10 +1,15 @@
+next
+=====
+* Add MIT license
+* ...
+
 0.3.2
 =====
+* Seperated doc in overview and details
+* Using README as doxygen frontpage, removed duplicated content
 * Fixed invalid memory access after a client disconnects
 * Added build support for macOS
 * Increased CMake requirement to version 3.6
-* Using README as doxygen frontpage, removed duplicated content
-* Improved doxygen documentation
 
 0.3.1
 =====
