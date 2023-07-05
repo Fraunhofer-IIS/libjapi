@@ -331,21 +331,46 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context* ctx, const char* pushs
 	return psc;
 }
 
-/*
- * Iterate through push service and unsubscribe & free memory for all clients
+/* 
+ * Remove push service context from japi context, unsubscribe for all clients and free memory
  */
-int japi_pushsrv_destroy(japi_pushsrv_context *psc)
+int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc)
 {
+	japi_pushsrv_context *psc_iter, *psc_prev, *psc_next;
 	japi_client *client, *client_next;
 
+	assert(ctx != NULL);
+
 	if (psc == NULL) {
-		fprintf(stderr,"ERROR: push service context is NULL");
+		fprintf(stderr,"ERROR: push service context is NULL\n");
 		return -1;
 	}
+	if (strcmp(psc->pushsrv_name, "") == 0) {
+		fprintf(stderr,"ERROR: push service context is empty\n");
+		return -2;
+	}
 
-	client = psc->clients;
+	/* clean up linked list in ctx->push_service */
+	psc_prev = NULL;
+	psc_iter = ctx->push_services;
+
+	while (psc_iter != NULL) {
+		psc_next = psc_iter->next;
+		if (psc_iter == psc) {
+			/* If first element */
+			if (psc_prev == NULL) {
+				ctx->push_services = psc_next;
+			} else {
+				psc_prev->next = psc_next;
+			}
+			break;
+		}
+		psc_prev = psc_iter;
+		psc_iter = psc_next;
+	}
 
 	/* Iterates through push service client list and frees memory for every element and for the push service themself */
+	client = psc->clients;
 	pthread_mutex_lock(&(psc->lock));
 	while (client != NULL) {
 		client_next = client->next;
