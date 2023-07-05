@@ -24,12 +24,12 @@ Copyright (c) 2023 Fraunhofer IIS
 #include <stdbool.h>
 
 extern "C"{
-#include <japi.h>
-#include <japi_intern.h>
-#include <japi_pushsrv_intern.h>
-#include <japi_pushsrv.h>
-#include <japi_utils.h>
-#include <rw_n.h>
+#include "japi.h"
+#include "japi_intern.h"
+#include "japi_pushsrv_intern.h"
+#include "japi_pushsrv.h"
+#include "japi_utils.h"
+#include "rw_n.h"
 }
 
 /* The handler for japi_register_request test */
