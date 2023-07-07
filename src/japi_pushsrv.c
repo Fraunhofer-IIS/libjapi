@@ -64,7 +64,7 @@ static int japi_pushsrv_add_client(japi_pushsrv_context *psc, int socket)
 
 	/* Error handling */
 	assert(psc != NULL);
-	assert(socket > 0);
+	assert(socket >= 0);
 
 	client = (japi_client*)malloc(sizeof(japi_client));
 	if (client == NULL) {
@@ -162,8 +162,7 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, json_object *jreq, js
 
 	/* Error handling */
 	assert(ctx != NULL);
-	assert(socket != -1);
-	assert(jreq != NULL);
+	assert(socket >= 0);
 	assert(jresp != NULL);
 
 	psc = ctx->push_services;
@@ -207,8 +206,7 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, json_object *jreq, 
 
 	/* Error handling */
 	assert(ctx != NULL);
-	assert(socket != -1);
-	assert(jreq != NULL);
+	assert(socket >= 0);
 	assert(jresp != NULL);
 
 	psc = ctx->push_services;
