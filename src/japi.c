@@ -94,9 +94,8 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 	bool args;
 
 	assert(ctx != NULL);
-	assert(request != NULL);
 	assert(response != NULL);
-	assert(socket != -1);
+	assert(socket >= 0);
 
 	ret = -1;
 	*response = NULL;
@@ -347,7 +346,7 @@ int japi_add_client(japi_context *ctx, int socket)
 
 	/* Error handling */
 	assert(ctx != NULL);
-	assert(socket > 0);
+	assert(socket >= 0);
 
 	/* Create new client list element */
 	client = (japi_client *)malloc(sizeof(japi_client));
@@ -384,7 +383,7 @@ int japi_remove_client(japi_context *ctx, int socket)
 
 	/* Error Handling */
 	assert(ctx != NULL);
-	assert(socket > 0);
+	assert(socket >= 0);
 
 	client = ctx->clients;
 	prev = NULL;
