@@ -59,6 +59,7 @@ typedef struct __japi_context {
 	struct __japi_client *clients; /*!< Pointer to the JAPI client context */
 	bool include_args_in_response; /*!< Flag to include request args in response */
 	bool shutdown; /*!< Flag to shutdown the JAPI server */
+	bool init; /*!< Flag to mark finished initialization */
 } japi_context;
 
 /*!

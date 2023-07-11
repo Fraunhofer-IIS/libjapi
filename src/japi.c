@@ -230,6 +230,7 @@ int japi_destroy(japi_context *ctx)
 int japi_register_request(japi_context* ctx, const char *req_name, japi_req_handler req_handler)
 {
 	japi_request *req;
+	char *bad_req_name = "japi_";
 
 	/* Error handling */
 	if (ctx == NULL) {
@@ -250,6 +251,11 @@ int japi_register_request(japi_context* ctx, const char *req_name, japi_req_hand
 	if (japi_get_request_handler(ctx,req_name) != NULL) {
 		fprintf(stderr,"ERROR: A request handler called '%s' was already registered.\n",req_name);
 		return -4;
+	}
+
+	if(ctx->init && strncmp(req_name, bad_req_name, strlen(bad_req_name)) == 0) {
+		fprintf(stderr, "ERROR: Request name is not allowed.\n");
+		return -5;
 	}
 
 	req = (japi_request *)malloc(sizeof(japi_request));
@@ -277,6 +283,7 @@ japi_context* japi_init(void *userptr)
 		return NULL;
 	}
 
+	ctx->init = false;
 	ctx->userptr = userptr;
 	ctx->requests = NULL;
 	ctx->push_services = NULL;
@@ -301,6 +308,8 @@ japi_context* japi_init(void *userptr)
 	/* Register list_push_service function  */
 	japi_register_request(ctx, "japi_pushsrv_list", &japi_pushsrv_list);
 	japi_register_request(ctx, "japi_cmd_list", &japi_cmd_list);
+
+	ctx->init = true;
 
 	return ctx;
 }

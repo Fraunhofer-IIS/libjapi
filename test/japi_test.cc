@@ -189,6 +189,9 @@ TEST(JAPI,Register)
 	EXPECT_EQ(japi_register_request(ctx,"dummy_request_02",&dummy_request_handler),0); // same handler for another name
 	EXPECT_EQ(japi_register_request(ctx,"",&dummy_request_handler),-2);
 
+	/* Request names starting with japi_ are not allowed */
+	EXPECT_EQ(japi_register_request(ctx,"japi_test",&dummy_request_handler),-5);
+
 	japi_destroy(ctx);
 }
 
