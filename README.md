@@ -50,3 +50,16 @@ You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/lib
 * http://json-c.github.io/json-c/
 * https://en.wikipedia.org/wiki/JSON
 * https://alan-mushi.github.io/2014/10/28/json-c-tutorial-part-1.html
+
+## Contributing
+
+When contributing to this project, automatic formatting of changes is strongly encouraged, so that formatting is getting more consistent over time.
+
+To do so, ensure you have [`pre-commit`](https://pre-commit.com/) installed and do the following
+
+```console
+$ pre-commit install
+pre-commit installed at .git/hooks/pre-commit
+```
+
+This will run `clang-format` on all *changes* you commit, gradually reformatting the code base to a more consistent state.
