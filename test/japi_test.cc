@@ -124,6 +124,13 @@ TEST(JAPI,ProcessMessage)
 	ctx = japi_init(NULL);
 	socket = 4;
 
+	/* If no request is registered, do not die */
+	EXPECT_EQ(japi_process_message(ctx, request, &response, socket), 0);
+	jobj = json_tokener_parse(response);
+	json_object_object_get_ex(jobj, "data", &jdata);
+	EXPECT_EQ(japi_get_value_as_str(jdata, "error", &sval), 0);
+	EXPECT_STREQ("no request handler found", sval);
+
 	japi_register_request(ctx,"dummy_request_handler",&dummy_request_handler);
 	/* On success, 0 returned. On error, -1 is returned */
 	EXPECT_EQ(japi_process_message(ctx, request, &response, socket),0);

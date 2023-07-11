@@ -128,4 +128,22 @@ void japi_pushsrv_remove_client_from_all_pushsrv(japi_context *ctx, int socket);
  */
 void japi_cmd_list(japi_context *ctx, json_object *request, json_object *response);
 
+/*!
+ * \brief Default handler for reacting to unknown requests.
+ *
+ * Can be overwritten by the user by registering a command called
+ * `request_not_found_handler`.
+ * Is called if no suitable registered request is found for the received command.
+ * Adds a field named "error" to the response which contains a string describing
+ * the issue.
+ *
+ * \param ctx		JAPI context
+ * \param request 	Pointer to JAPI JSON request
+ * \param response	Pointer to JAPI JSON response
+ * \note Parameter 'ctx' and request' declared, although not used in function.
+ * Function declaration needs to be identical to respective handler.
+*/
+void japi_request_not_found_handler(
+    japi_context *ctx, json_object *request, json_object *response);
+
 #endif /* __JAPI_INTERN_H__ */

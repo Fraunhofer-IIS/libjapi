@@ -151,10 +151,10 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 			req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
 
 			if (req_handler == NULL) {
-				fprintf(stderr, "ERROR: No suitable request handler found. Request was: %s\n", req_name);
-				goto out_free;
+				fprintf(stderr, "ERROR: No suitable request handler found. Falling back to default fallback handler. Request was: %s\n", req_name);
+				req_handler = japi_get_request_handler(ctx, "japi_request_not_found_handler");
 			} else {
-				fprintf(stderr, "WARNING: No suitable request handler found. Falling back to registered fallback handler. Request was: %s\n", req_name);
+				fprintf(stderr, "WARNING: No suitable request handler found. Falling back to user registered fallback handler. Request was: %s\n", req_name);
 			}
 		}
 		
@@ -302,6 +302,8 @@ japi_context* japi_init(void *userptr)
  	/* Ignore SIGPIPE Signal */
 	signal(SIGPIPE, SIG_IGN);
 
+	/* Register the default fallback handler */
+	japi_register_request(ctx, "japi_request_not_found_handler", &japi_request_not_found_handler);
 	/* Register subscribe/unsubscribe service function */
 	japi_register_request(ctx, "japi_pushsrv_subscribe", &japi_pushsrv_subscribe);
 	japi_register_request(ctx, "japi_pushsrv_unsubscribe", &japi_pushsrv_unsubscribe);
@@ -626,4 +628,12 @@ void japi_cmd_list(japi_context *ctx, json_object *request, json_object *respons
 
 	/* Add array to JSON-object */
 	json_object_object_add(response, "commands", jarray);
+}
+
+/*
+ * Default handler for reacting to unknown requests.
+ */
+void japi_request_not_found_handler(japi_context *ctx, json_object *request, json_object *response)
+{
+	json_object_object_add(response, "error", json_object_new_string("no request handler found"));
 }
