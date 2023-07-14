@@ -1,0 +1,28 @@
+name: package
+
+on:
+  push: 
+    branches: ["master", "add-github-actions"]
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    container: 
+      image: ghcr.io/fraunhofer-iis/libjapi_ci
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    
+    - name: Build RPM package
+      run: ls -la; package/create_rpm.sh
+
+    - name: Upload package
+      uses: actions/upload-artifact@v3
+      with:
+        name: Binary RPM
+        path: package/rpmbuild/RPMS/x86_64/libjapi*.rpm
