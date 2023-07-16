@@ -7,7 +7,7 @@ create push services, which asynchronously push JSON messages to the clients
 subscribed to them.
 
 ## Documentation
-The documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
+The documentation can be found [here](https://fraunhofer-iis.github.io/libjapi/).
 
 ## Packages
 Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
