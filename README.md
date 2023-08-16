@@ -53,6 +53,7 @@ You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/lib
 
 ## Contributing
 
+### Pre-commit hooks
 When contributing to this project, automatic formatting of changes is strongly encouraged, so that formatting is getting more consistent over time.
 
 To do so, ensure you have [`pre-commit`](https://pre-commit.com/) installed and do the following
@@ -63,3 +64,15 @@ pre-commit installed at .git/hooks/pre-commit
 ```
 
 This will run `clang-format` on all *changes* you commit, gradually reformatting the code base to a more consistent state.
+
+### Code Coverage
+To test which part of the code is called by tests, use the coverage tool.
+
+To do so, make sure you have lcov installed and do the following
+
+    $ mkdir build
+    $ cd build/
+    $ cmake -DCMAKE_BUILD_TYPE=Debug ../
+    $ make coverage
+
+The result ist displayed in the console. Additionally a report is created at "build/coverage/index.html".
