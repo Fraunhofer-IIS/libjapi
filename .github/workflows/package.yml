@@ -2,7 +2,7 @@ name: package
 
 on:
   push: 
-    branches: ["master", "add-github-actions"]
+    branches: ["master", "dev"]
 
 jobs:
   package:
