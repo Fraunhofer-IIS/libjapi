@@ -26,7 +26,7 @@ Prebuild packages for CentOS 7 can be downloaded from the [latest package Action
 ### Installation
 Clone the git repository and it's submodules:
 
-    $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi.git
+    $ git clone --recurse-submodules git@github.com:Fraunhofer-IIS/libjapi.git
 
 Create a build directory and call *cmake* in that directory.
 
