@@ -38,7 +38,7 @@ ctx->userptr ... #access to passed argument
 \endcode
 
 ## Default handler
-There is a default `japi_request_not_found_handler` which reacts with an error
+There is a default `japi_request_not_found_handler` which responds with an error
 message if an unknown request is received. If you want to change that behavior,
 you can register a `request_not_found_handler` which will then be used instead
 to behave as you desire.
