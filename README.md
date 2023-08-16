@@ -10,7 +10,7 @@ subscribed to them.
 The documentation can be found [here](https://fraunhofer-iis.github.io/libjapi/).
 
 ## Packages
-Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
+Prebuild packages for CentOS 7 can be downloaded from the [latest package Action](https://github.com/Fraunhofer-IIS/libjapi/actions/workflows/package.yml).
 
 ## Features
 * Synchronous communication (request, response)
