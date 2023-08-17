@@ -76,3 +76,4 @@ To do so, make sure you have lcov installed and do the following
     $ make coverage
 
 The result ist displayed in the console. Additionally a report is created at "build/coverage/index.html".
+You can also find it [here](https://fraunhofer-iis.github.io/libjapi/coverage/index.html).

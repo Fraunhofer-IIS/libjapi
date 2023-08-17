@@ -9,7 +9,7 @@ on:
 
 env:
     # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-    BUILD_TYPE: Release
+    BUILD_TYPE: Debug
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -31,12 +31,21 @@ jobs:
       with:
         submodules: true
 
+    - name: Install debug dependencies
+      run: yum -y install lcov
+
     - name: Configure CMake
       run: cmake3 -B ${{ env.GITHUB_WORKSPACE }}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Create Docs
       working-directory: ${{ env.GITHUB_WORKSPACE }}/build
       run: make doc
+
+    - name: Create Code Coverage Report
+      working-directory: ${{ env.GITHUB_WORKSPACE }}/build
+      run: |
+        make coverage &&
+        cp -r coverage doc/html
 
     - name: Upload artifacts
       uses: actions/upload-pages-artifact@v2
