@@ -1,7 +1,15 @@
 next
 =====
-* Add MIT license
-* ...
+* 
+
+0.4.0
+=====
+* Add MIT license and publish to GitHub
+* Add make target coverage
+* Add githook for formatting with clang
+* Move GitLab-CI to GitHub actions
+* Add japi handler that lists registered commands
+* Some fixes and doc update
 
 0.3.2
 =====
