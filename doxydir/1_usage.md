@@ -19,6 +19,8 @@ ctx = japi_init(NULL);
 japi_register_request(ctx,"function_name",&function_handler);
 \endcode
 
+Note, that "function_name" may not start with "japi_" which is used to mark internal commands.
+
 The function will be saved in the passed JAPI context. The server which manages the requests, is started with:
 \code
 japi_start_server(ctx,8080);
@@ -35,3 +37,8 @@ ctx = japi_init(object_pointer);
 ctx->userptr ... #access to passed argument
 \endcode
 
+## Default handler
+There is a default `japi_request_not_found_handler` which responds with an error
+message if an unknown request is received. If you want to change that behavior,
+you can register a `request_not_found_handler` which will then be used instead
+to behave as you desire.

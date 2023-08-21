@@ -1,13 +1,35 @@
+/*!
+Copyright (c) 2023 Fraunhofer IIS
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the “Software”), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include <gtest/gtest.h>
 #include <stdbool.h>
 
 extern "C"{
-#include <japi.h>
-#include <japi_intern.h>
-#include <japi_pushsrv_intern.h>
-#include <japi_pushsrv.h>
-#include <japi_utils.h>
-#include <rw_n.h>
+#include "japi.h"
+#include "japi_intern.h"
+#include "japi_pushsrv_intern.h"
+#include "japi_pushsrv.h"
+#include "japi_utils.h"
+#include "rw_n.h"
 }
 
 /* The handler for japi_register_request test */
@@ -102,6 +124,13 @@ TEST(JAPI,ProcessMessage)
 	ctx = japi_init(NULL);
 	socket = 4;
 
+	/* If no request is registered, do not die */
+	EXPECT_EQ(japi_process_message(ctx, request, &response, socket), 0);
+	jobj = json_tokener_parse(response);
+	json_object_object_get_ex(jobj, "data", &jdata);
+	EXPECT_EQ(japi_get_value_as_str(jdata, "error", &sval), 0);
+	EXPECT_STREQ("no request handler found", sval);
+
 	japi_register_request(ctx,"dummy_request_handler",&dummy_request_handler);
 	/* On success, 0 returned. On error, -1 is returned */
 	EXPECT_EQ(japi_process_message(ctx, request, &response, socket),0);
@@ -167,7 +196,45 @@ TEST(JAPI,Register)
 	EXPECT_EQ(japi_register_request(ctx,"dummy_request_02",&dummy_request_handler),0); // same handler for another name
 	EXPECT_EQ(japi_register_request(ctx,"",&dummy_request_handler),-2);
 
+	/* Request names starting with japi_ are not allowed */
+	EXPECT_EQ(japi_register_request(ctx,"japi_test",&dummy_request_handler),-5);
+
 	japi_destroy(ctx);
+}
+
+TEST(JAPI, ListCommands)
+{
+	japi_context *ctx;
+	japi_request *cmd;
+	json_object *jobj;
+
+	ctx = japi_init(NULL);
+	jobj = json_object_new_object();
+
+	/* Register some test requests */
+	japi_register_request(ctx,"test01",&dummy_request_handler);
+	japi_register_request(ctx,"test02",&dummy_request_handler);
+	japi_register_request(ctx,"test03",&dummy_request_handler);
+
+	/* The function to be tested */
+	japi_cmd_list(ctx, NULL, jobj);
+
+	cmd = ctx->requests;
+
+	/* Iterate commands array & context and compare strings */
+	json_object_object_foreach(jobj, key, val) {
+		json_object_object_get_ex(jobj, key, &val);
+		int arraylen = json_object_array_length(val);
+		int i;
+		json_object * jvalue;
+		while (cmd != NULL) {
+			for (i=0; i< arraylen; i++) {
+				jvalue = json_object_array_get_idx(val, i);
+				EXPECT_STREQ(json_object_get_string(jvalue),cmd->name);
+				cmd = cmd->next;
+			}
+		}
+	}
 }
 
 TEST(JAPI_Push_Service,Register)
@@ -209,50 +276,53 @@ TEST(JAPI_Push_Service,SubscribeAndUnsubscribe)
 
 	/* Build JSON request */
 	json_object_object_add(jreq,"service",json_object_new_string(pushsrv_name));
+	json_object_object_add(jreq, "socket", json_object_new_int(socket));
 
 	/* Sub-/unsubscribe before registering, expecting false */
-	japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
+	japi_pushsrv_subscribe(ctx, jreq, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_FALSE(bval);
 
-	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
+	japi_pushsrv_unsubscribe(ctx, jreq, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_FALSE(bval);
 
 	/* Pass illegal JSON request, expecting false */
 	json_object_object_add(illegal_req,"service",NULL);
+	json_object_object_add(illegal_req, "socket", json_object_new_int(socket));
 
-	japi_pushsrv_subscribe(ctx,socket,illegal_req,jresp);
+	japi_pushsrv_subscribe(ctx, illegal_req, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_FALSE(bval);
 
-	japi_pushsrv_unsubscribe(ctx,socket,illegal_req,jresp);
+	japi_pushsrv_unsubscribe(ctx, illegal_req, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_FALSE(bval);
 
 	/* Pass illegal key */
 	json_object_object_add(bad_req,"bad_key",json_object_new_string(pushsrv_name));
+	json_object_object_add(bad_req, "socket", json_object_new_int(socket));
 
-	japi_pushsrv_subscribe(ctx,socket,bad_req,jresp);
+	japi_pushsrv_subscribe(ctx, bad_req, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_FALSE(bval);
 
-	japi_pushsrv_unsubscribe(ctx,socket,bad_req,jresp);
+	japi_pushsrv_unsubscribe(ctx, bad_req, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_FALSE(bval);
 
 	/* Try to unsubscribe without subscribed before, should fail */
 	japi_pushsrv_register(ctx,"test_pushsrv");
-	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
+	japi_pushsrv_unsubscribe(ctx, jreq, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_FALSE(bval);
 
 	/* Expect true */
-	japi_pushsrv_subscribe(ctx,socket,jreq,jresp);
+	japi_pushsrv_subscribe(ctx, jreq, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_TRUE(bval);
 
-	japi_pushsrv_unsubscribe(ctx,socket,jreq,jresp);
+	japi_pushsrv_unsubscribe(ctx, jreq, jresp);
 	EXPECT_EQ(japi_get_value_as_bool(jresp, "success",&bval),0);
 	EXPECT_TRUE(bval);
 
@@ -370,14 +440,20 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	japi_pushsrv_register(ctx,"pushsrv_temperature");
 
 	/* Add some clients */
-	japi_pushsrv_subscribe(ctx,4,push_temperature_jreq,jobj);
-	japi_pushsrv_subscribe(ctx,5,push_temperature_jreq,jobj);
-	japi_pushsrv_subscribe(ctx,6,push_temperature_jreq,jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(4));
+	japi_pushsrv_subscribe(ctx, push_temperature_jreq, jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(5));
+	japi_pushsrv_subscribe(ctx, push_temperature_jreq, jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(6));
+	japi_pushsrv_subscribe(ctx, push_temperature_jreq, jobj);
 	/* Add a clients a second time */
-	japi_pushsrv_subscribe(ctx,7,push_temperature_jreq,jobj);
-	japi_pushsrv_subscribe(ctx,7,push_temperature_jreq,jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(7));
+	japi_pushsrv_subscribe(ctx, push_temperature_jreq, jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(7));
+	japi_pushsrv_subscribe(ctx, push_temperature_jreq, jobj);
 
-	japi_pushsrv_subscribe(ctx,5,push_status_jreq,jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(15));
+	japi_pushsrv_subscribe(ctx, push_status_jreq, jobj);
 
 	counter = 0;
 	psc = ctx->push_services;
@@ -390,8 +466,10 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	EXPECT_EQ(counter,5);
 
 	/* Unsubscribe some clients */
-	japi_pushsrv_unsubscribe(ctx,5,push_temperature_jreq,jobj);
-	japi_pushsrv_unsubscribe(ctx,6,push_temperature_jreq,jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(5));
+	japi_pushsrv_unsubscribe(ctx, push_temperature_jreq, jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(6));
+	japi_pushsrv_unsubscribe(ctx, push_temperature_jreq, jobj);
 
 	counter = 0;
 	psc = ctx->push_services;
@@ -404,7 +482,8 @@ TEST(JAPI_Push_Service,AddRemoveClient)
 	EXPECT_EQ(counter,3);
 
 	/* Unsubscribe client that is not subscribed */
-	japi_pushsrv_unsubscribe(ctx,15,push_temperature_jreq,jobj);
+	json_object_object_add(push_temperature_jreq, "socket", json_object_new_int(15));
+	japi_pushsrv_unsubscribe(ctx, push_temperature_jreq, jobj);
 	EXPECT_EQ(japi_get_value_as_bool(jobj, "success",&bval),0);
 	EXPECT_FALSE(bval);
 }
@@ -421,9 +500,40 @@ TEST(JAPI_Push_Service,PushServiceDestroy)
 	psc_status = japi_pushsrv_register(ctx,"pushsrv_temperature");
 
 	/* Destroy push services */
-	EXPECT_EQ(japi_pushsrv_destroy(psc_status),0);
-	EXPECT_EQ(japi_pushsrv_destroy(psc_temperature),0);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, psc_status),0);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, psc_temperature),0);
 
 	/* Pass bad push service context */
-	EXPECT_EQ(japi_pushsrv_destroy(NULL),-1);
+	EXPECT_EQ(japi_pushsrv_destroy(ctx, NULL),-1);
+}
+
+TEST(JAPI_Push_Service,PushServiceRemoveEntryFromLInkedList)
+{
+	japi_context *ctx;
+	japi_pushsrv_context *psc01, *psc02, *psc05;
+	json_object *jobj;
+
+	ctx = japi_init(NULL);
+	jobj = json_object_new_object();
+
+	/* Register some test services, creates
+	{ "services": [ "test05", "test04", "test03", "test02", "test01" ] }
+	*/
+	psc01 = japi_pushsrv_register(ctx,"test01");
+	psc02 = japi_pushsrv_register(ctx,"test02");
+	japi_pushsrv_register(ctx,"test03");
+	japi_pushsrv_register(ctx,"test04");
+	psc05 = japi_pushsrv_register(ctx,"test05");
+
+	japi_pushsrv_destroy(ctx, psc02);
+	japi_pushsrv_list(ctx, NULL, jobj);
+	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test05\", \"test04\", \"test03\", \"test01\" ] }");
+
+	japi_pushsrv_destroy(ctx, psc05);
+	japi_pushsrv_list(ctx, NULL, jobj);
+	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test04\", \"test03\", \"test01\" ] }");
+
+	japi_pushsrv_destroy(ctx, psc01);
+	japi_pushsrv_list(ctx, NULL, jobj);
+	EXPECT_STREQ(json_object_to_json_string(jobj), "{ \"services\": [ \"test04\", \"test03\" ] }");
 }

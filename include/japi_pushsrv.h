@@ -10,8 +10,25 @@
  * japi_pushsrv is a universal JSON API library.
  *
  * \copyright
- * Copyright (c) 2019 Fraunhofer IIS.
- * All rights reserved.
+ * Copyright (c) 2023 Fraunhofer IIS
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the “Software”), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 #ifndef __JAPI_PUSHSRV_H__
@@ -64,15 +81,19 @@ typedef struct __japi_pushsrv_context {
 japi_pushsrv_context* japi_pushsrv_register(japi_context *ctx, const char *pushsrv_name);
 
 /*!
- * \brief Unsubscribes and frees memory space for all push service clients
+ * \brief Remove push service context from japi context, unsubscribe for all clients and free memory
+ * 
+ * Clean up the push service if no more needed:
+ * * remove entry from linked list in `ctx->push_services`
+ * * unsubscribe all clients and free their memory
+ * * stop the push service and free the used memory
  *
- * Iterates through push service clients and unsubscribes and frees memory.
- *
- * \param psc	JAPI push service context
- *
+ * \param ctx		JAPI context
+ * \param psc	JAPI push service context which is to be removed
+ * 
  * \returns On success, 0 is returned. On error, -1 is returned.
  */
-int japi_pushsrv_destroy(japi_pushsrv_context *psc);
+int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc);
 
 /*!
  * \brief Send messages to all subscribed clients

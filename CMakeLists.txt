@@ -88,3 +88,20 @@ target_include_directories(testsuite
 )
 
 add_custom_target(run_test COMMAND testsuite DEPENDS testsuite)
+
+################################
+# Test code coverage #
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+  include(${CMAKE_SOURCE_DIR}/cmake/CodeCoverage.cmake)
+  set(COVERAGE_EXCLUDES
+      "doxydir"
+      "/usr/include/*"
+      "googletest/*"
+      "test/*"
+  )
+  append_coverage_compiler_flags()
+
+  setup_target_for_coverage_lcov(NAME coverage EXECUTABLE testsuite)
+endif()

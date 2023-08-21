@@ -10,8 +10,25 @@
  * japi_pushsrv is a universal JSON API library.
  *
  * \copyright
- * Copyright (c) 2019 Fraunhofer IIS.
- * All rights reserved.
+ * Copyright (c) 2023 Fraunhofer IIS
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the “Software”), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 #include <assert.h>
@@ -47,7 +64,7 @@ static int japi_pushsrv_add_client(japi_pushsrv_context *psc, int socket)
 
 	/* Error handling */
 	assert(psc != NULL);
-	assert(socket > 0);
+	assert(socket >= 0);
 
 	client = (japi_client*)malloc(sizeof(japi_client));
 	if (client == NULL) {
@@ -137,16 +154,15 @@ void japi_pushsrv_remove_client_from_all_pushsrv(japi_context *ctx, int socket)
 /*
  * Saves client socket, if passed push service is registered
  */
-void japi_pushsrv_subscribe(japi_context *ctx, int socket, json_object *jreq, json_object *jresp)
+void japi_pushsrv_subscribe(japi_context *ctx, json_object *jreq, json_object *jresp)
 {
 	japi_pushsrv_context *psc;
 	json_object *jval;
 	const char* pushsrv_name;
+	int socket, ret;
 
 	/* Error handling */
 	assert(ctx != NULL);
-	assert(socket != -1);
-	assert(jreq != NULL);
 	assert(jresp != NULL);
 
 	psc = ctx->push_services;
@@ -158,11 +174,18 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, json_object *jreq, js
 		return;
 	}
 	pushsrv_name = json_object_get_string(jval);
+	ret = json_object_object_get_ex(jreq,"socket",&jval);
+	socket = json_object_get_int(jval);
+	if (!ret | socket < 0) {
+		json_object_object_add(jresp, "success", json_object_new_boolean(false));
+		json_object_object_add(jresp, "message" ,json_object_new_string("Subscribing push service to non-existing socket"));
+		return;
+	}
 
 	/* Search for push service in list and save socket, if found */
 	while (psc != NULL) {
 		if (strcasecmp(pushsrv_name,psc->pushsrv_name) == 0) {
-			japi_pushsrv_add_client(psc,socket);
+			ret = japi_pushsrv_add_client(psc,socket);
 			break;
 		}
 		psc = psc->next;
@@ -171,27 +194,26 @@ void japi_pushsrv_subscribe(japi_context *ctx, int socket, json_object *jreq, js
 	json_object_object_add(jresp,"service",json_object_new_string(pushsrv_name));
 
 	/* Create JSON response object */
-	if (psc != NULL) {
-		json_object_object_add(jresp,"success",json_object_new_boolean(true));
-	} else {
+	if (psc == NULL | ret < 0) {
 		json_object_object_add(jresp,"success",json_object_new_boolean(false));
 		json_object_object_add(jresp,"message",json_object_new_string("Push service not found."));
+	} else {
+		json_object_object_add(jresp,"success",json_object_new_boolean(true));
 	}
 }
 
 /*
  * Removes client socket, if passed push service is registered
  */
-void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, json_object *jreq, json_object *jresp)
+void japi_pushsrv_unsubscribe(japi_context *ctx, json_object *jreq, json_object *jresp)
 {
 	japi_pushsrv_context *psc;
 	json_object* jval;
 	const char* pushsrv_name;
+	int ret, socket;
 
 	/* Error handling */
 	assert(ctx != NULL);
-	assert(socket != -1);
-	assert(jreq != NULL);
 	assert(jresp != NULL);
 
 	psc = ctx->push_services;
@@ -205,6 +227,14 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, int socket, json_object *jreq, 
 		return;
 	}
 	pushsrv_name = json_object_get_string(jval);
+
+	ret = json_object_object_get_ex(jreq,"socket",&jval);
+	socket = json_object_get_int(jval);
+	if (!ret | socket < 0) {
+		json_object_object_add(jresp, "success", json_object_new_boolean(false));
+		json_object_object_add(jresp, "message" ,json_object_new_string("Unsubscribing push service from non-existing socket"));
+		return;
+	}
 
 	/* Search for push service in list and remove socket, if found & socket is registered */
 	while (psc != NULL) {
@@ -314,21 +344,42 @@ japi_pushsrv_context* japi_pushsrv_register(japi_context* ctx, const char* pushs
 	return psc;
 }
 
-/*
- * Iterate through push service and unsubscribe & free memory for all clients
+/* 
+ * Remove push service context from japi context, unsubscribe for all clients and free memory
  */
-int japi_pushsrv_destroy(japi_pushsrv_context *psc)
+int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc)
 {
+	japi_pushsrv_context *psc_iter, *psc_prev, *psc_next;
 	japi_client *client, *client_next;
 
+	assert(ctx != NULL);
+
 	if (psc == NULL) {
-		fprintf(stderr,"ERROR: push service context is NULL");
+		fprintf(stderr,"ERROR: push service context is NULL\n");
 		return -1;
 	}
 
-	client = psc->clients;
+	/* clean up linked list in ctx->push_service */
+	psc_prev = NULL;
+	psc_iter = ctx->push_services;
+
+	while (psc_iter != NULL) {
+		psc_next = psc_iter->next;
+		if (psc_iter == psc) {
+			/* If first element */
+			if (psc_prev == NULL) {
+				ctx->push_services = psc_next;
+			} else {
+				psc_prev->next = psc_next;
+			}
+			break;
+		}
+		psc_prev = psc_iter;
+		psc_iter = psc_next;
+	}
 
 	/* Iterates through push service client list and frees memory for every element and for the push service themself */
+	client = psc->clients;
 	pthread_mutex_lock(&(psc->lock));
 	while (client != NULL) {
 		client_next = client->next;
