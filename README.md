@@ -7,10 +7,10 @@ create push services, which asynchronously push JSON messages to the clients
 subscribed to them.
 
 ## Documentation
-The documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
+The documentation can be found [here](https://fraunhofer-iis.github.io/libjapi/).
 
 ## Packages
-Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
+Prebuild packages for CentOS 7 can be downloaded from the [latest package Action](https://github.com/Fraunhofer-IIS/libjapi/actions/workflows/package.yml).
 
 ## Features
 * Synchronous communication (request, response)
@@ -26,7 +26,7 @@ Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/sof
 ### Installation
 Clone the git repository and it's submodules:
 
-    $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi.git
+    $ git clone --recurse-submodules git@github.com:Fraunhofer-IIS/libjapi.git
 
 Create a build directory and call *cmake* in that directory.
 
