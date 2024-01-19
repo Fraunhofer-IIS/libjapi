@@ -130,7 +130,8 @@ int japi_destroy(japi_context *ctx);
  * -2 for empty request name,
  * -3 for empty request handler,
  * -4 for duplicate naming,
- * -5 for failed memory allocation, is returned.
+ * -5 for failed memory allocation,
+ * -6 for bad request name (starting with "japi_") is returned.
  */
 int japi_register_request(japi_context *ctx, const char *req_name,
 						  japi_req_handler req_handler);

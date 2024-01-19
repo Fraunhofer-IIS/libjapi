@@ -179,7 +179,7 @@ void japi_pushsrv_subscribe(japi_context *ctx, json_object *jreq, json_object *j
 	pushsrv_name = json_object_get_string(jval);
 	ret = json_object_object_get_ex(jreq, "socket", &jval);
 	socket = json_object_get_int(jval);
-	if (!ret | socket < 0) {
+	if (!ret || socket < 0) {
 		json_object_object_add(jresp, "success", json_object_new_boolean(false));
 		json_object_object_add(
 			jresp, "message",
@@ -199,7 +199,7 @@ void japi_pushsrv_subscribe(japi_context *ctx, json_object *jreq, json_object *j
 	json_object_object_add(jresp, "service", json_object_new_string(pushsrv_name));
 
 	/* Create JSON response object */
-	if (psc == NULL | ret < 0) {
+	if (psc == NULL || ret < 0) {
 		json_object_object_add(jresp, "success", json_object_new_boolean(false));
 		json_object_object_add(jresp, "message",
 							   json_object_new_string("Push service not found."));
@@ -237,7 +237,7 @@ void japi_pushsrv_unsubscribe(japi_context *ctx, json_object *jreq, json_object 
 
 	ret = json_object_object_get_ex(jreq, "socket", &jval);
 	socket = json_object_get_int(jval);
-	if (!ret | socket < 0) {
+	if (!ret || socket < 0) {
 		json_object_object_add(jresp, "success", json_object_new_boolean(false));
 		json_object_object_add(
 			jresp, "message",

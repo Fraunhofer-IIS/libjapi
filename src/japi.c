@@ -267,7 +267,7 @@ int japi_register_request(japi_context *ctx, const char *req_name,
 
 	if (ctx->init && strncmp(req_name, bad_req_name, strlen(bad_req_name)) == 0) {
 		fprintf(stderr, "ERROR: Request name is not allowed.\n");
-		return -5;
+		return -6;
 	}
 
 	req = (japi_request *)malloc(sizeof(japi_request));
