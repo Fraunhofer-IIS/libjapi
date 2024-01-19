@@ -10,8 +10,25 @@
  * libjapi is a universal JSON API library.
  *
  * \copyright
- * Copyright (c) 2019 Fraunhofer IIS.
- * All rights reserved.
+ * Copyright (c) 2023 Fraunhofer IIS
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the “Software”), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 #ifndef __JAPI_INTERN_H__
@@ -97,5 +114,36 @@ int japi_add_client(japi_context *ctx, int socket);
 * \param socket	The socket to be removed
 */
 void japi_pushsrv_remove_client_from_all_pushsrv(japi_context *ctx, int socket);
+
+/*!
+ * \brief Provide the names of all registered commands as a JAPI response.
+ *
+ * Provides the names of all registered commands as a JAPI response.
+ *
+ * \param ctx		JAPI context
+ * \param request 	Pointer to JAPI JSON request
+ * \param response	Pointer to JAPI JSON response
+ * \note Parameter 'request' declared, although not used in function.
+ * Function declaration needs to be identical to respective handler.
+ */
+void japi_cmd_list(japi_context *ctx, json_object *request, json_object *response);
+
+/*!
+ * \brief Default handler for reacting to unknown requests.
+ *
+ * Can be overwritten by the user by registering a command called
+ * `request_not_found_handler`.
+ * Is called if no suitable registered request is found for the received command.
+ * Adds a field named "error" to the response which contains a string describing
+ * the issue.
+ *
+ * \param ctx		JAPI context
+ * \param request 	Pointer to JAPI JSON request
+ * \param response	Pointer to JAPI JSON response
+ * \note Parameter 'ctx' and request' declared, although not used in function.
+ * Function declaration needs to be identical to respective handler.
+*/
+void japi_request_not_found_handler(
+    japi_context *ctx, json_object *request, json_object *response);
 
 #endif /* __JAPI_INTERN_H__ */
