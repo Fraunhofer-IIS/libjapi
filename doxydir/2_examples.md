@@ -1,6 +1,6 @@
 # Examples
 
-To view the full example take a look <a href="https://git01.iis.fhg.de/ks-ip-lib/software/libjapi/-/blob/master/doxydir/demo.cpp">here</a>.
+To view the full example take a look [here](https://github.com/Fraunhofer-IIS/libjapi/blob/master/doxydir/demo.cpp).
 
 \anchor serverExample
 ## Server example

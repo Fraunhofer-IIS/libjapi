@@ -7,10 +7,10 @@ create push services, which asynchronously push JSON messages to the clients
 subscribed to them.
 
 ## Documentation
-The documentation can be found [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/doc/html/index.html).
+The documentation can be found [here](https://fraunhofer-iis.github.io/libjapi/).
 
 ## Packages
-Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/software/libjapi/repo/index.html).
+Prebuild packages for CentOS 7 can be downloaded from the [latest package Action](https://github.com/Fraunhofer-IIS/libjapi/actions/workflows/package.yml).
 
 ## Features
 * Synchronous communication (request, response)
@@ -24,6 +24,10 @@ Prebuild packages can be downloaded [here](http://ks-ip-lib.git01.iis.fhg.de/sof
 * [cmake version 3.6](https://cmake.org/)
 
 ### Installation
+Clone the git repository and it's submodules:
+
+    $ git clone --recurse-submodules git@github.com:Fraunhofer-IIS/libjapi.git
+
 Create a build directory and call *cmake* in that directory.
 
     $ mkdir build
@@ -48,147 +52,35 @@ You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/lib
 
     $ git clone --recurse-submodules git@git01.iis.fhg.de:ks-ip-lib/software/libjapi-demo.git
 
-## Usage & Examples
-* Create a JAPI context
-* Write application specific functions
-* Register these application specific functions to libjapi
-* Start a JAPI server
-* Enjoy the flexibility
+## References
+* https://github.com/json-c/json-c
+* http://json-c.github.io/json-c/
+* https://en.wikipedia.org/wiki/JSON
+* https://alan-mushi.github.io/2014/10/28/json-c-tutorial-part-1.html
 
-### Server example
+## Contributing
 
-    #include <assert.h>
-    #include <stdio.h>
-    #include <string.h>
-    #include <unistd.h> /* sleep */
+### Pre-commit hooks
+When contributing to this project, automatic formatting of changes is strongly encouraged, so that formatting is getting more consistent over time.
 
-    #include <japi.h>
-    #include <japi_pushsrv.h>
-    #include <japi_utils.h>
+To do so, ensure you have [`pre-commit`](https://pre-commit.com/) installed and do the following
 
-    /* User defined push service routine */
-    int push_counter(japi_pushsrv_context *psc)
-    {
-            json_object *jmsg;
-            int i;
+```console
+$ pre-commit install
+pre-commit installed at .git/hooks/pre-commit
+```
 
-            assert(psc != NULL);
+This will run `clang-format` on all *changes* you commit, gradually reformatting the code base to a more consistent state.
 
-            i = 0;
-            jmsg = json_object_new_object();
+### Code Coverage
+To test which part of the code is called by tests, use the coverage tool.
 
-            while (psc->enabled) {
-                    /* Create JSON response string */
-                    json_object_object_add(jmsg,"counter",json_object_new_int(i));
+To do so, make sure you have lcov installed and do the following
 
-                    /* Push message */
-                    japi_pushsrv_sendmsg(psc,jmsg);
+    $ mkdir build
+    $ cd build/
+    $ cmake -DCMAKE_BUILD_TYPE=Debug ../
+    $ make coverage
 
-                    i++;
-                    sleep(1);
-            }
-            json_object_put(jmsg);
-
-            return 0;
-    }
-
-    static void rnf_handler(japi_context *ctx, json_object *request, json_object *response)
-    {
-            json_object_object_add(response, "japi_response_msg", json_object_new_string("ERROR: No request handler found!"));
-    }
-
-    static void get_temperature(japi_context *ctx, json_object *request, json_object *response)
-    {
-            double temperature;
-            const char *unit;
-
-            /*
-            * TODO: Read the temperature from a sensor...
-            */
-            temperature = 27.0;
-
-            /* Provide the temperature in KELVIN (if requested)
-            * or CELSIUS (default) */
-            unit = japi_get_value_as_str(request, "unit");
-            if (unit != NULL && strcmp(unit, "kelvin") == 0) {
-                    temperature += 273;
-            } else {
-                    unit = "celsius";
-            }
-
-            /* Prepare and provide response */
-            json_object_object_add(response, "temperature", json_object_new_double(temperature));
-            json_object_object_add(response, "unit", json_object_new_string(unit));
-    }
-
-    int main(int argc, char *argv[])
-    {
-            int ret;
-            japi_context *ctx;
-            japi_pushsrv_context *psc_counter;
-
-            /* Read port */
-            if (argc != 2) {
-                    fprintf(stderr, "ERROR: Missing argument or wrong amount of arguments.\n" \
-                                    "Usage:\n\t%s <port>\n", argv[0]);
-                    return -1;
-            }
-
-            /* Create JSON API context */
-            ctx = japi_init(NULL);
-            if (ctx == NULL) {
-                    fprintf(stderr, "ERROR: Failed to create japi context\n");
-                    return -1;
-            }
-
-            /* Register JSON API request */
-            japi_register_request(ctx, "get_temperature", &get_temperature);
-
-            /* Register push service */
-            psc_counter = japi_pushsrv_register(ctx, "push_counter");
-
-            /* Start push thread */
-            japi_pushsrv_start(psc_counter,&push_counter);
-
-            /* Provide JSON API interface via TCP */
-            ret = japi_start_server(ctx, argv[1]);
-
-            /* Wait for the thread to finish */
-            japi_pushsrv_stop(psc_counter);
-
-            /* Destroy JAPI context */
-            japi_destroy(ctx);
-
-            return ret;
-    }
-
-### Client JSON request examples
-
-    {
-      "japi_request": "get_temperature",
-      "args": {
-      "unit": "kelvin"
-      }
-    }
-
-    {
-      "japi_request": "japi_pushsrv_list",
-    }
-
-    {
-      "japi_request": "japi_pushsrv_subscribe",
-      "args": {
-      "service": "push_counter"
-      }
-    }
-
-    {
-      "japi_request": "japi_pushsrv_unsubscribe",
-      "args": {
-      "service": "push_counter"
-      }
-    }
-
-## License
-
-Copyright (c) 2023 Fraunhofer IIS. Released under the [MIT License](COPYING).
+The result ist displayed in the console. Additionally a report is created at "build/coverage/index.html".
+You can also find it [here](https://fraunhofer-iis.github.io/libjapi/coverage/index.html).
