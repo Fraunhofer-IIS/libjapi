@@ -55,7 +55,8 @@ typedef struct __japi_context {
 	uint16_t max_clients; /*!< Number of maximal allowed clients */
 	pthread_mutex_t lock; /*!< Mutual access lock */
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
-	struct __japi_pushsrv_context *push_services; /*!< Pointer to the JAPI push service list */
+	struct __japi_pushsrv_context
+		*push_services; /*!< Pointer to the JAPI push service list */
 	struct __japi_client *clients; /*!< Pointer to the JAPI client context */
 	bool include_args_in_response; /*!< Flag to include request args in response */
 	bool shutdown; /*!< Flag to shutdown the JAPI server */
@@ -70,23 +71,25 @@ typedef struct __japi_context {
 typedef struct __japi_client {
 	int socket; /*!< Socket to connect */
 	creadline_buf_t crl_buffer; /*!< Buffer used by creadline_r() */
-	struct __japi_client* next; /*!< Pointer to the next client struct or NULL */
+	struct __japi_client *next; /*!< Pointer to the next client struct or NULL */
 } japi_client;
 
 /*!
  * \brief JAPI request handler type.
  */
-typedef void (*japi_req_handler)(japi_context *ctx, json_object *request, json_object *response);
+typedef void (*japi_req_handler)(japi_context *ctx, json_object *request,
+								 json_object *response);
 
 /*!
  * \brief JAPI request struct.
  *
- * A JAPI request struct is a mapping between a unique request name and a JAPI request handler.
+ * A JAPI request struct is a mapping between a unique request name and a JAPI request
+ * handler.
  */
 typedef struct __japi_request {
 	const char *name; /*!< Printable name of the request */
 	japi_req_handler func; /*!< Function to call */
-	struct __japi_request* next; /*!< Pointer to the next request struct or NULL */
+	struct __japi_request *next; /*!< Pointer to the next request struct or NULL */
 } japi_request;
 
 /*!
@@ -99,7 +102,7 @@ typedef struct __japi_request {
  *
  * \returns	On success, a japi_context object is returned. On error, NULL is returned.
  */
-japi_context* japi_init(void *userptr);
+japi_context *japi_init(void *userptr);
 
 /*!
  * \brief Destroy a JAPI context.
@@ -122,13 +125,15 @@ int japi_destroy(japi_context *ctx);
  * \param req_name	Request name
  * \param req_handler	Function pointer
  *
- * \returns	On success, zero is returned. On error, -1 for empty JAPI context,
+ * \returns	On success, zero is returned. On error,
+ * -1 for empty JAPI context,
  * -2 for empty request name,
  * -3 for empty request handler,
  * -4 for duplicate naming,
  * -5 for failed memory allocation, is returned.
  */
-int japi_register_request(japi_context *ctx, const char *req_name, japi_req_handler req_handler);
+int japi_register_request(japi_context *ctx, const char *req_name,
+						  japi_req_handler req_handler);
 
 /*!
  * \brief Start a JAPI server
@@ -150,7 +155,8 @@ int japi_start_server(japi_context *ctx, const char *port);
  * \param ctx	JAPI context
  * \param num	Number of clients to be allowed. 0 stands for unlimited.
  *
- * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is
+ * returned.
  */
 int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
 
@@ -162,7 +168,8 @@ int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num);
  * \param ctx		JAPI context
  * \param include_args	Include request arguments in response.
  *
- * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is
+ * returned.
  */
 int japi_include_args_in_response(japi_context *ctx, bool include_args);
 
@@ -173,7 +180,8 @@ int japi_include_args_in_response(japi_context *ctx, bool include_args);
  *
  * \param ctx	JAPI context
  *
- * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is returned.
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is
+ * returned.
  */
 int japi_shutdown(japi_context *ctx);
 

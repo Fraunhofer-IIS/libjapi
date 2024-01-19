@@ -34,10 +34,10 @@
 #include <assert.h>
 #include <signal.h>
 #include <stdio.h>
-#include <strings.h> /* strcasecmp */
 #include <string.h> /* strcmp */
-#include <sys/socket.h>
+#include <strings.h> /* strcasecmp */
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -45,13 +45,12 @@
 
 #include "creadline.h"
 #include "japi_intern.h"
-#include "japi_pushsrv_intern.h"
 #include "japi_pushsrv.h"
+#include "japi_pushsrv_intern.h"
 #include "japi_utils.h"
-#include "rw_n.h"
 #include "networking.h"
 #include "prntdbg.h"
-
+#include "rw_n.h"
 
 /* Look for a request handler matching the name 'name'.
  *
@@ -81,9 +80,10 @@ static japi_req_handler japi_get_request_handler(japi_context *ctx, const char *
  * - Prepare the JSON response
  * - Free memory
  */
-int japi_process_message(japi_context *ctx, const char *request, char **response, int socket)
+int japi_process_message(japi_context *ctx, const char *request, char **response,
+						 int socket)
 {
-	const char* req_name;
+	const char *req_name;
 	json_object *jreq;
 	json_object *jreq_no;
 	json_object *jresp;
@@ -103,20 +103,21 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 	/* Create JSON object from received message */
 	jreq = json_tokener_parse(request);
 	if (jreq == NULL) {
-		fprintf(stderr, "ERROR: json_tokener_parse() failed. Received message: %s\n", request);
+		fprintf(stderr, "ERROR: json_tokener_parse() failed. Received message: %s\n",
+				request);
 		return -1;
 	}
-	
+
 	/* Only create new JSON objects after a valid JSON request was parsed. */
 	jresp = json_object_new_object(); /* Response object */
 	jresp_data = json_object_new_object();
 
-
 	if ((japi_get_value_as_str(jreq, "japi_request", &req_name)) == 0) {
 
 		/* Prepare response */
-		json_object_object_add(jresp, "japi_response", json_object_new_string(req_name));
-		
+		json_object_object_add(jresp, "japi_response",
+							   json_object_new_string(req_name));
+
 		/* Include japi_request_no in response, if included with request */
 		if (json_object_object_get_ex(jreq, "japi_request_no", &jreq_no)) {
 			json_object_get(jreq_no);
@@ -125,11 +126,11 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 
 		/* Get arguments as an JSON object */
 		args = json_object_object_get_ex(jreq, "args", &jargs);
-		
+
 		/* Add an empty args JSON object if no args were given
 		   Otherwise, include args with response, if configured. */
 		if (!args) {
-			json_object_object_add(jreq,"args",NULL);
+			json_object_object_add(jreq, "args", NULL);
 			json_object_object_get_ex(jreq, "args", &jargs);
 		} else {
 			if (ctx->include_args_in_response) {
@@ -139,7 +140,8 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 		}
 
 		/* Subscribe/unsubscribe service needs client socket */
-		if (strcasecmp(req_name,"japi_pushsrv_subscribe") == 0 || strcasecmp(req_name,"japi_pushsrv_unsubscribe") == 0) {
+		if (strcasecmp(req_name, "japi_pushsrv_subscribe") == 0 ||
+			strcasecmp(req_name, "japi_pushsrv_unsubscribe") == 0) {
 			json_object_object_add(jargs, "socket", json_object_new_int(socket));
 		}
 
@@ -151,13 +153,20 @@ int japi_process_message(japi_context *ctx, const char *request, char **response
 			req_handler = japi_get_request_handler(ctx, "request_not_found_handler");
 
 			if (req_handler == NULL) {
-				fprintf(stderr, "ERROR: No suitable request handler found. Falling back to default fallback handler. Request was: %s\n", req_name);
-				req_handler = japi_get_request_handler(ctx, "japi_request_not_found_handler");
+				fprintf(stderr,
+						"ERROR: No suitable request handler found. Falling back to "
+						"default fallback handler. Request was: %s\n",
+						req_name);
+				req_handler =
+					japi_get_request_handler(ctx, "japi_request_not_found_handler");
 			} else {
-				fprintf(stderr, "WARNING: No suitable request handler found. Falling back to user registered fallback handler. Request was: %s\n", req_name);
+				fprintf(stderr,
+						"WARNING: No suitable request handler found. Falling back to "
+						"user registered fallback handler. Request was: %s\n",
+						req_name);
 			}
 		}
-		
+
 		/* Call request handler */
 		req_handler(ctx, jargs, jresp_data);
 
@@ -194,7 +203,7 @@ int japi_shutdown(japi_context *ctx)
 
 	ctx->shutdown = true;
 
-	return 0;		
+	return 0;
 }
 
 int japi_destroy(japi_context *ctx)
@@ -227,7 +236,8 @@ int japi_destroy(japi_context *ctx)
 	return 0;
 }
 
-int japi_register_request(japi_context* ctx, const char *req_name, japi_req_handler req_handler)
+int japi_register_request(japi_context *ctx, const char *req_name,
+						  japi_req_handler req_handler)
 {
 	japi_request *req;
 	char *bad_req_name = "japi_";
@@ -238,7 +248,7 @@ int japi_register_request(japi_context* ctx, const char *req_name, japi_req_hand
 		return -1;
 	}
 
-	if ((req_name == NULL) || (strcmp(req_name,"") == 0)) {
+	if ((req_name == NULL) || (strcmp(req_name, "") == 0)) {
 		fprintf(stderr, "ERROR: Request name is NULL or empty.\n");
 		return -2;
 	}
@@ -248,12 +258,14 @@ int japi_register_request(japi_context* ctx, const char *req_name, japi_req_hand
 		return -3;
 	}
 
-	if (japi_get_request_handler(ctx,req_name) != NULL) {
-		fprintf(stderr,"ERROR: A request handler called '%s' was already registered.\n",req_name);
+	if (japi_get_request_handler(ctx, req_name) != NULL) {
+		fprintf(stderr,
+				"ERROR: A request handler called '%s' was already registered.\n",
+				req_name);
 		return -4;
 	}
 
-	if(ctx->init && strncmp(req_name, bad_req_name, strlen(bad_req_name)) == 0) {
+	if (ctx->init && strncmp(req_name, bad_req_name, strlen(bad_req_name)) == 0) {
 		fprintf(stderr, "ERROR: Request name is not allowed.\n");
 		return -5;
 	}
@@ -273,7 +285,7 @@ int japi_register_request(japi_context* ctx, const char *req_name, japi_req_hand
 	return 0;
 }
 
-japi_context* japi_init(void *userptr)
+japi_context *japi_init(void *userptr)
 {
 	japi_context *ctx;
 
@@ -294,16 +306,17 @@ japi_context* japi_init(void *userptr)
 	ctx->shutdown = false;
 
 	/* Initialize mutex */
-	if (pthread_mutex_init(&(ctx->lock),NULL) != 0) {
-		fprintf(stderr,"ERROR: mutex initialization has failed\n");
+	if (pthread_mutex_init(&(ctx->lock), NULL) != 0) {
+		fprintf(stderr, "ERROR: mutex initialization has failed\n");
 		return NULL;
 	}
 
- 	/* Ignore SIGPIPE Signal */
+	/* Ignore SIGPIPE Signal */
 	signal(SIGPIPE, SIG_IGN);
 
 	/* Register the default fallback handler */
-	japi_register_request(ctx, "japi_request_not_found_handler", &japi_request_not_found_handler);
+	japi_register_request(ctx, "japi_request_not_found_handler",
+						  &japi_request_not_found_handler);
 	/* Register subscribe/unsubscribe service function */
 	japi_register_request(ctx, "japi_pushsrv_subscribe", &japi_pushsrv_subscribe);
 	japi_register_request(ctx, "japi_pushsrv_unsubscribe", &japi_pushsrv_unsubscribe);
@@ -324,10 +337,10 @@ int japi_set_max_allowed_clients(japi_context *ctx, uint16_t num)
 {
 	/* Error handling */
 	if (ctx == NULL) {
-                fprintf(stderr, "ERROR: JAPI context is NULL.\n");
-                return -1;
-        }
-	
+		fprintf(stderr, "ERROR: JAPI context is NULL.\n");
+		return -1;
+	}
+
 	ctx->max_clients = num;
 
 	return 0;
@@ -343,7 +356,7 @@ int japi_include_args_in_response(japi_context *ctx, bool include_args)
 		fprintf(stderr, "ERROR: JAPI context is NULL.\n");
 		return -1;
 	}
-	
+
 	ctx->include_args_in_response = include_args;
 
 	return 0;
@@ -371,7 +384,7 @@ int japi_add_client(japi_context *ctx, int socket)
 	client->crl_buffer.nbytes = 0;
 
 	pthread_mutex_lock(&(ctx->lock));
-	prntdbg("adding client %d to japi context\n",socket);
+	prntdbg("adding client %d to japi context\n", socket);
 	/* Add socket */
 	client->socket = socket;
 
@@ -401,7 +414,7 @@ int japi_remove_client(japi_context *ctx, int socket)
 	prev = NULL;
 	ret = -1;
 
-	japi_pushsrv_remove_client_from_all_pushsrv(ctx,socket);
+	japi_pushsrv_remove_client_from_all_pushsrv(ctx, socket);
 
 	pthread_mutex_lock(&(ctx->lock));
 	/* Remove client from list */
@@ -409,7 +422,8 @@ int japi_remove_client(japi_context *ctx, int socket)
 		/* If first element */
 		if ((client->socket == socket) && (prev == NULL)) {
 			ctx->clients = client->next;
-			prntdbg("removing client %d from japi context and close socket\n",client->socket);
+			prntdbg("removing client %d from japi context and close socket\n",
+					client->socket);
 			close(client->socket);
 			free(client);
 			ctx->num_clients--;
@@ -419,7 +433,8 @@ int japi_remove_client(japi_context *ctx, int socket)
 		/* If last element */
 		if ((client->socket == socket) && (client->next == NULL)) {
 			prev->next = NULL;
-			prntdbg("removing client %d from japi context and close socket\n",client->socket);
+			prntdbg("removing client %d from japi context and close socket\n",
+					client->socket);
 			close(client->socket);
 			free(client);
 			ctx->num_clients--;
@@ -428,7 +443,8 @@ int japi_remove_client(japi_context *ctx, int socket)
 		}
 		if (client->socket == socket) {
 			prev->next = client->next;
-			prntdbg("removing client %d from japi context and close socket\n",client->socket);
+			prntdbg("removing client %d from japi context and close socket\n",
+					client->socket);
 			close(client->socket);
 			free(client);
 			ctx->num_clients--;
@@ -444,17 +460,17 @@ int japi_remove_client(japi_context *ctx, int socket)
 	return ret;
 }
 
-int japi_remove_all_clients(japi_context *ctx) 
+int japi_remove_all_clients(japi_context *ctx)
 {
 	japi_client *client, *following_client;
 
 	/* Error Handling */
 	assert(ctx != NULL);
-	
+
 	client = ctx->clients;
 	while (client != NULL) {
 		following_client = client->next;
-		if (japi_remove_client(ctx,client->socket) != 0) {
+		if (japi_remove_client(ctx, client->socket) != 0) {
 			return -1;
 		}
 		client = following_client;
@@ -528,12 +544,13 @@ int japi_start_server(japi_context *ctx, const char *port)
 			if (FD_ISSET(client->socket, &fdrd)) {
 
 				int ret;
-				char* request;
-				char* response;
+				char *request;
+				char *response;
 
 				do {
 
-					ret = creadline_r(client->socket, (void**)&request, &(client->crl_buffer));
+					ret = creadline_r(client->socket, (void **)&request,
+									  &(client->crl_buffer));
 					if (ret > 0) {
 
 						response = NULL;
@@ -543,8 +560,8 @@ int japi_start_server(japi_context *ctx, const char *port)
 
 						/* After the request buffer is processed, the memory
 						 *is not needed anymore and can be freed at this point. */
-						free(request); 
-						
+						free(request);
+
 						/* Send response (if provided) */
 						if (response != NULL) {
 							ret = write_n(client->socket, response, strlen(response));
@@ -552,16 +569,19 @@ int japi_start_server(japi_context *ctx, const char *port)
 
 							if (ret <= 0) {
 								/* Write failed */
-								fprintf(stderr, "ERROR: Failed to send response to client %i (write returned %i)\n",client->socket, ret);
-								japi_remove_client(ctx,client->socket);
+								fprintf(stderr,
+										"ERROR: Failed to send response to client %i "
+										"(write returned %i)\n",
+										client->socket, ret);
+								japi_remove_client(ctx, client->socket);
 								break;
 							}
 						}
 					} else if (ret == 0) {
-						if(request == NULL) {
+						if (request == NULL) {
 							/* Received EOF (client disconnected) */
-							prntdbg("client %d disconnected\n",client->socket);
-							japi_remove_client(ctx,client->socket);
+							prntdbg("client %d disconnected\n", client->socket);
+							japi_remove_client(ctx, client->socket);
 							break;
 						} else {
 							/* Received an empty line */
@@ -569,7 +589,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 						}
 					} else {
 						fprintf(stderr, "ERROR: creadline() failed (ret = %i)\n", ret);
-						japi_remove_client(ctx,client->socket);
+						japi_remove_client(ctx, client->socket);
 						break;
 					}
 
@@ -588,8 +608,8 @@ int japi_start_server(japi_context *ctx, const char *port)
 				return -1;
 			}
 			if (ctx->max_clients == 0 || ctx->num_clients < ctx->max_clients) {
-				japi_add_client(ctx,client_socket);
-				prntdbg("client %d added\n",client_socket);
+				japi_add_client(ctx, client_socket);
+				prntdbg("client %d added\n", client_socket);
 			} else {
 				close(client_socket);
 			}
@@ -597,7 +617,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 	}
 
 	/* Clean up */
-	japi_remove_all_clients(ctx);	
+	japi_remove_all_clients(ctx);
 
 	close(server_socket);
 
@@ -633,7 +653,9 @@ void japi_cmd_list(japi_context *ctx, json_object *request, json_object *respons
 /*
  * Default handler for reacting to unknown requests.
  */
-void japi_request_not_found_handler(japi_context *ctx, json_object *request, json_object *response)
+void japi_request_not_found_handler(japi_context *ctx, json_object *request,
+									json_object *response)
 {
-	json_object_object_add(response, "error", json_object_new_string("no request handler found"));
+	json_object_object_add(response, "error",
+						   json_object_new_string("no request handler found"));
 }
