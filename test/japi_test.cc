@@ -601,3 +601,77 @@ TEST(JAPI, TcpKeepAliveSetup)
 			  0);
 	EXPECT_EQ(opt_val, 6);
 }
+
+TEST(JAPI, JAPI_TcpKeepAliveFunctionality)
+{
+	// this test recreates big parts from `japi_start_server`
+	// cannot use `japi_start_server` here as it is blocking, so cannot cut connection
+	// while running.
+	// Do I need handling for SIGPIPE once keepalive strikes?
+
+	// create and configure server socket
+	int server_socket = tcp_start_server("1234");
+	ASSERT_GT(server_socket, 0);
+
+	ASSERT_EQ(enable_tcp_keepalive(server_socket, 1, 1, 1, 2), 0);
+
+	// Start listening for incoming connections
+	ASSERT_EQ(listen(server_socket, 10), 0) << "Failed to listen on server socket";
+
+	// Create a client socket
+	int clientSock = socket(AF_INET, SOCK_STREAM, 0);
+	ASSERT_NE(clientSock, -1) << "Failed to create client socket";
+
+	// Connect the client socket to the server
+	struct sockaddr_in serverAddr = {0};
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(1234);
+	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	// ASSERT_EQ(connect(clientSock, (struct sockaddr *)&serverAddr,
+	// sizeof(serverAddr)), 0) << "Failed to connect client socket";
+
+	// Close the client socket abruptly to simulate an ungraceful disconnection
+	// close(clientSock);
+
+	// Accept the incoming connection on the server side
+	// int acceptedSock = accept(server_socket, NULL, NULL);
+	// ASSERT_NE(acceptedSock, -1) << "Failed to accept connection on server socket";
+
+	// Set a timeout for receiving data on the accepted socket
+	// struct timeval timeout;
+	// timeout.tv_sec = 5;
+	// timeout.tv_usec = 0;
+	// setsockopt(acceptedSock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout,
+	// sizeof(timeout));
+
+	// Check if the client disconnected ungracefully by receiving data from the
+	// client
+	char buf[1024];
+	// ssize_t numBytes = recv(acceptedSock, buf, sizeof(buf), 0);
+	// ASSERT_EQ(numBytes, 0) << "Client did not disconnect ungracefully";
+
+	// wait until keepalive kicks in, then check if socket is closed automatically
+	// sleep(3);
+
+	// reconnect from client side
+	ASSERT_EQ(connect(clientSock, (struct sockaddr *)&serverAddr, sizeof(serverAddr)),
+			  0)
+		<< "Failed to connect client socket (2)";
+	// Accept again the incoming connection on the server side
+	int acceptedSock = accept(server_socket, NULL, NULL);
+	ASSERT_NE(acceptedSock, -1) << "Failed to accept connection on server socket (2)";
+	// Send the message to the server
+	const char *message = "Hello, server!";
+	ssize_t num_bytes_sent = send(clientSock, message, strlen(message), 0);
+	ASSERT_EQ(num_bytes_sent, strlen(message)) << "Message was not fully sent";
+
+	// Check if the client disconnected ungracefully by receiving data from the client
+	ssize_t numBytes_recv = recv(acceptedSock, buf, sizeof(buf), 0);
+	ASSERT_EQ(numBytes_recv, strlen(message)) << "Sent message was not fully received";
+
+	// Close the accepted socket
+	close(acceptedSock);
+
+	// Close the server socket
+	close(server_socket);
+}
