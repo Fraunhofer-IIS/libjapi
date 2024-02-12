@@ -236,8 +236,9 @@ int japi_destroy(japi_context *ctx)
 	return 0;
 }
 
-int japi_register_request(japi_context *ctx, const char *req_name,
-						  japi_req_handler req_handler)
+static int japi_register_request_internal(japi_context *ctx, const char *req_name,
+										  japi_req_handler req_handler,
+										  bool allow_internal_req_name)
 {
 	japi_request *req;
 	char *bad_req_name = "japi_";
@@ -265,9 +266,11 @@ int japi_register_request(japi_context *ctx, const char *req_name,
 		return -4;
 	}
 
-	if (ctx->init && strncmp(req_name, bad_req_name, strlen(bad_req_name)) == 0) {
-		fprintf(stderr, "ERROR: Request name is not allowed.\n");
-		return -6;
+	if (!allow_internal_req_name) {
+		if (strncmp(req_name, bad_req_name, strlen(bad_req_name)) == 0) {
+			fprintf(stderr, "ERROR: Request name is not allowed.\n");
+			return -6;
+		}
 	}
 
 	req = (japi_request *)malloc(sizeof(japi_request));
@@ -285,6 +288,12 @@ int japi_register_request(japi_context *ctx, const char *req_name,
 	return 0;
 }
 
+int japi_register_request(japi_context *ctx, const char *req_name,
+						  japi_req_handler req_handler)
+{
+	return japi_register_request_internal(ctx, req_name, req_handler, false);
+}
+
 japi_context *japi_init(void *userptr)
 {
 	japi_context *ctx;
@@ -295,7 +304,6 @@ japi_context *japi_init(void *userptr)
 		return NULL;
 	}
 
-	ctx->init = false;
 	ctx->userptr = userptr;
 	ctx->requests = NULL;
 	ctx->push_services = NULL;
@@ -315,16 +323,16 @@ japi_context *japi_init(void *userptr)
 	signal(SIGPIPE, SIG_IGN);
 
 	/* Register the default fallback handler */
-	japi_register_request(ctx, "japi_request_not_found_handler",
-						  &japi_request_not_found_handler);
+	japi_register_request_internal(ctx, "japi_request_not_found_handler",
+								   &japi_request_not_found_handler, true);
 	/* Register subscribe/unsubscribe service function */
-	japi_register_request(ctx, "japi_pushsrv_subscribe", &japi_pushsrv_subscribe);
-	japi_register_request(ctx, "japi_pushsrv_unsubscribe", &japi_pushsrv_unsubscribe);
+	japi_register_request_internal(ctx, "japi_pushsrv_subscribe",
+								   &japi_pushsrv_subscribe, true);
+	japi_register_request_internal(ctx, "japi_pushsrv_unsubscribe",
+								   &japi_pushsrv_unsubscribe, true);
 	/* Register list_push_service function  */
-	japi_register_request(ctx, "japi_pushsrv_list", &japi_pushsrv_list);
-	japi_register_request(ctx, "japi_cmd_list", &japi_cmd_list);
-
-	ctx->init = true;
+	japi_register_request_internal(ctx, "japi_pushsrv_list", &japi_pushsrv_list, true);
+	japi_register_request_internal(ctx, "japi_cmd_list", &japi_cmd_list, true);
 
 	return ctx;
 }
