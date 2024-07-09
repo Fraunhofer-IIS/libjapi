@@ -40,6 +40,10 @@ A Makefile is generated. Run 'make' to build the libjapi libraries.
 
 A shared and a static library is built.
 
+To run the internal tests run
+
+    $ make run_test
+
 ## Demo
 You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/libjapi-demo), with examples for all features from the repository listed below:
 
