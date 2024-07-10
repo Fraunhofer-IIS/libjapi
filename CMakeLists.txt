@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.14)
 
 project(libjapi VERSION 0.4)
 set(SOVERSION 1)
