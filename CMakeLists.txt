@@ -64,8 +64,6 @@ endif(DOXYGEN_FOUND)
 
 ################################
 # Create unit test excecutable #
-enable_testing()
-
 find_package(GTest QUIET)
 if(${GTest_FOUND})
 	# Gtest on System Installed
@@ -89,11 +87,11 @@ add_executable(testsuite
     test/japi_test.cc
 )
 
-# Link GoogleTest to test executable
+target_compile_options(testsuite PUBLIC "-pthread")
+
 target_link_libraries(testsuite
   gtest_main
-  gtest
-  japi-static
+  japi
 )
 
 # Include directories
@@ -105,9 +103,6 @@ target_include_directories(testsuite
 )
 
 add_custom_target(run_test COMMAND testsuite DEPENDS testsuite)
-
-# Discover tests
-gtest_discover_tests(testsuite)
 
 ################################
 # Test code coverage #
