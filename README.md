@@ -38,11 +38,11 @@ A Makefile is generated. Run 'make' to build the libjapi libraries.
 
     $ make
 
-A shared and a static library is built.
+A shared and a static library is built. Tests are built by default. They can be disabled using the command `cmake -DLIBJAPI_ENABLE_TESTING=FALSE ../` variable.
 
 To run the internal tests run
 
-    $ make run_test
+    $ ctest
 
 ## Demo
 You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/libjapi-demo), with examples for all features from the repository listed below:

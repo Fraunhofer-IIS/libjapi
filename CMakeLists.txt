@@ -9,7 +9,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # 'cmake -DCMAKE_BUILD_TYPE=Debug ../' from build folder for debug output #
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE "Release")
+  set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 file(GLOB SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*)
@@ -29,12 +29,11 @@ target_include_directories(japi_objs PUBLIC include/ ${JSONC_INCLUDE_DIRS})
 set_property(TARGET japi_objs PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # set up actual libraries
-add_library(japi        SHARED $<TARGET_OBJECTS:japi_objs>)
+add_library(japi SHARED $<TARGET_OBJECTS:japi_objs>)
 add_library(japi-static STATIC $<TARGET_OBJECTS:japi_objs>)
 
-set_target_properties(japi PROPERTIES
-  PUBLIC_HEADER "${PUBLIC_HEADERS}"
-  SOVERSION ${SOVERSION})
+set_target_properties(japi PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}"
+                                      SOVERSION ${SOVERSION})
 
 target_link_libraries(japi PkgConfig::JSONC)
 target_link_libraries(japi-static PkgConfig::JSONC)
@@ -54,8 +53,10 @@ install(TARGETS japi
 find_package(Doxygen)
 
 if(DOXYGEN_FOUND)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doxydir/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(doc
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doxydir/Doxyfile.in
+                 ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  add_custom_target(
+    doc
     ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Generating API documentation with Doxygen" VERBATIM
@@ -64,59 +65,44 @@ endif(DOXYGEN_FOUND)
 
 ################################
 # Create unit test excecutable #
-find_package(GTest QUIET)
-if(${GTest_FOUND})
-	# Gtest on System Installed
-	message("GTest: Installed using GTest")
-	include(GoogleTest)
-else()
+option(LIBJAPI_ENABLE_TESTING "Enable testing with googletest" ON)
+if(LIBJAPI_ENABLE_TESTING)
+  enable_testing()
+
   # Include GoogleTest in the project
   include(FetchContent)
   FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.8.1
-  )
+    GIT_TAG release-1.8.0)
   FetchContent_MakeAvailable(googletest)
   include(GoogleTest)
-endif()
-    
-# Define test executable
-add_executable(testsuite
-  EXCLUDE_FROM_ALL
-    test/japi_test.cc
-)
 
-target_compile_options(testsuite PUBLIC "-pthread")
+  # Define test executable
+  add_executable(testsuite test/japi_test.cc)
 
-target_link_libraries(testsuite
-  gtest_main
-  japi
-)
+  target_compile_options(testsuite PUBLIC "-pthread")
 
-# Include directories
-target_include_directories(testsuite
-  PUBLIC
-    include/
-    src/
-    ${JSONC_INCLUDE_DIRS}
-)
+  target_link_libraries(testsuite gtest_main japi)
 
-add_custom_target(run_test COMMAND testsuite DEPENDS testsuite)
+  # Include directories
+  target_include_directories(testsuite PUBLIC include/ src/
+                                              ${JSONC_INCLUDE_DIRS})
+
+  gtest_discover_tests(testsuite)
 
 ################################
 # Test code coverage #
-
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-  include(${CMAKE_SOURCE_DIR}/cmake/CodeCoverage.cmake)
-  set(COVERAGE_EXCLUDES
-      "doxydir"
-      "/usr/include/*"
-      "googletest/*"
-      "test/*"
-  )
-  append_coverage_compiler_flags()
-
-  setup_target_for_coverage_lcov(NAME coverage EXECUTABLE testsuite)
-endif()
+  if(CMAKE_BUILD_TYPE MATCHES "Debug")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+    include(${CMAKE_SOURCE_DIR}/cmake/CodeCoverage.cmake)
+    set(COVERAGE_EXCLUDES
+        "doxydir"
+        "/usr/include"
+        "_deps/googletest"
+        "test/*"
+    )
+    append_coverage_compiler_flags()
+    setup_target_for_coverage_lcov(NAME coverage EXECUTABLE testsuite)
+  endif()
+endif(LIBJAPI_ENABLE_TESTING)
