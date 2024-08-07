@@ -45,6 +45,7 @@ Tests are not built by default. They can be enabled using the command `cmake -DL
 and running `make` afterwards again.
 
 To run the internal tests run
+
     $ cd test
     $ ctest
 
