@@ -22,7 +22,7 @@ Prebuild packages for CentOS 7 can be downloaded from the [latest package Action
 ### Prerequisites
 * [json-c](https://github.com/json-c/json-c)
 * [cmake version 3.6](https://cmake.org/) for libjapi build
-* [cmake version 3.14](https://cmake.org/) for libjapi test-framwork build
+* [cmake version 3.14](https://cmake.org/) for libjapi test-framework build
 
 ### Installation
 Clone the git repository and it's submodules:
