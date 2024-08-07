@@ -43,9 +43,15 @@
 
 static size_t max_linebuf_size =  64*1024*1024;
 
+<<<<<<< Updated upstream
 void japi_set_max_linebuf_size(size_t max_linebuf_size)
 {
 	max_linebuf_size = max_linebuf_size;
+=======
+void japi_set_max_linebuf_size(size_t max_linebuf_size_user)
+{
+	max_linebuf_size = max_linebuf_size_user;
+>>>>>>> Stashed changes
 }
 
 static int strnpos(const char *s, int c, size_t maxlen)
