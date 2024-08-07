@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.6)
 
 project(libjapi VERSION 0.4)
 set(SOVERSION 1)
@@ -67,6 +67,7 @@ endif(DOXYGEN_FOUND)
 # Create unit test excecutable #
 option(LIBJAPI_ENABLE_TESTING "Enable testing with googletest" ON)
 if(LIBJAPI_ENABLE_TESTING)
+  cmake_minimum_required(VERSION 3.14)
   enable_testing()
 
   # Include GoogleTest in the project
