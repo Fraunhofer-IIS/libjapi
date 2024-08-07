@@ -21,7 +21,8 @@ Prebuild packages for CentOS 7 can be downloaded from the [latest package Action
 
 ### Prerequisites
 * [json-c](https://github.com/json-c/json-c)
-* [cmake version 3.6](https://cmake.org/)
+* [cmake version 3.6](https://cmake.org/) for libjapi build
+* [cmake version 3.14](https://cmake.org/) for libjapi test-framework build
 
 ### Installation
 Clone the git repository and it's submodules:
@@ -38,7 +39,7 @@ A Makefile is generated. Run 'make' to build the libjapi libraries.
 
     $ make
 
-A shared and a static library is built. Tests are built by default. They can be disabled using the command `cmake -DLIBJAPI_ENABLE_TESTING=FALSE ../` variable.
+A shared and a static library is built. Tests are built by default. They can be disabled using the command `cmake -DLIBJAPI_ENABLE_TESTING=OFF ../` variable.
 
 To run the internal tests run
 
