@@ -40,16 +40,13 @@
 
 #include "creadline.h"
 
-/* Do not change the maximum line size here! Define
- * CREADLINE_MAX_LINE_SIZE in the header file to
- * overwrite the default value. */
-#ifndef CREADLINE_MAX_LINE_SIZE
-/*! Internal definition of the maximum allowed line size. Can be overwritten by
- * defining CREADLINE_MAX_LINE_SIZE. */
-#define __MAX_LINEBUF_SIZE__ 64*1024*1024
-#else
-#define __MAX_LINEBUF_SIZE__ CREADLINE_MAX_LINE_SIZE
-#endif
+
+static size_t max_linebuf_size =  64*1024*1024;
+
+void japi_set_max_linebuf_size(size_t max_linebuf_size)
+{
+	max_linebuf_size = max_linebuf_size;
+}
 
 static int strnpos(const char *s, int c, size_t maxlen)
 {
@@ -102,15 +99,15 @@ int creadline_r(int fd, void **dst, creadline_buf_t *buffer)
 
 		/* Check if there is enough space left to call read again. If a new
 		 * read could write beyond the line buffer it's size is doubled as long
-		 * as __MAX_LINEBUF_SIZE__ is not reached. */
+		 * as max_linebuf_size is not reached. */
 
 		if (linebuf_nbytes + CREADLINE_BLOCK_SIZE > linebuf_size) {
 
 			char* new_linebuf = NULL;
 			int new_linebuf_size = 2*linebuf_size;
 
-			if (new_linebuf_size > __MAX_LINEBUF_SIZE__) {
-				fprintf(stderr, "ERROR: Maximum line size of %i bytes exceeded!\n", __MAX_LINEBUF_SIZE__);
+			if (new_linebuf_size > max_linebuf_size) {
+				fprintf(stderr, "ERROR: Maximum line size of %li bytes exceeded!\n", max_linebuf_size);
 				goto error_free;
 			}
 
