@@ -47,10 +47,6 @@
  */
 #define CREADLINE_BLOCK_SIZE 1024
 
-/* Define CREADLINE_MAX_LINE_SIZE to 1GiB. Will overwrite default CREADLINE_MAX_LINE_SIZE of 64 * 1024 * 1024 in
- * lijapi creadline.c. Some application need more capacity to transfer data. */
-#define CREADLINE_MAX_LINE_SIZE (1024*1024*1024)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,8 +54,9 @@ extern "C" {
 /*!
  * \brief Define the maximum line size a japi-command can have. Will overwrite 
  * default value of 64 * 1024 * 1024 in lijapi creadline.c. Some applications 
- * need more capacity to transfer data. 
+ * need more capacity to transfer data.
  * 
+ * \param max_linebuf_size_user	creadline maximum buffer size
  */
 void japi_set_max_linebuf_size(size_t max_linebuf_size_user);
 
