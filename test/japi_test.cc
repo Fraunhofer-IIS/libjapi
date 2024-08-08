@@ -30,6 +30,7 @@ extern "C" {
 #include "japi_pushsrv_intern.h"
 #include "japi_utils.h"
 #include "rw_n.h"
+#include "creadline.h"
 }
 
 /* The handler for japi_register_request test */
@@ -180,6 +181,40 @@ TEST(JAPI, IncludeArgsWithResponse)
 	EXPECT_EQ(42, json_object_get_int(jdata));
 
 	/* Teardown */
+	japi_destroy(ctx);
+}
+
+TEST(JAPI, SetMaxLinebufSize)
+{
+	/* Setup */
+	japi_context *ctx = japi_init(NULL);
+	char *response = NULL;
+	const char *sval;
+	const char *request = "{'japi_request':'dummy_request_handler'}";
+	json_object *jobj;
+	json_object *jdata;
+	int socket = 4;
+	japi_register_request(ctx, "dummy_request_handler", &dummy_request_handler);
+
+	/* Configure context to include request arguments in response */
+	EXPECT_EQ(japi_set_max_linebuf_size(NULL, false), -1);
+
+	/* Test valid line size */
+	EXPECT_EQ(japi_set_max_linebuf_size(ctx, CREADLINE_BLOCK_SIZE), 0);
+
+	/* TODO: set_max_linebuf_size is actually used by creadline_r which is
+	 * not invoked in japi_process_message(). A mock client socket  with
+	 * dummy data has to be created so creadline can read from this socket. 
+	 * */
+
+	/* On success, 0 returned. On error, -1 is returned */
+	EXPECT_EQ(japi_process_message(ctx, request, &response, socket), 0);
+	jobj = json_tokener_parse(response);
+	json_object_object_get_ex(jobj, "data", &jdata);
+	EXPECT_EQ(japi_get_value_as_str(jdata, "value", &sval), 0);
+	EXPECT_STREQ("hello world", sval);
+
+	/* Clean up */
 	japi_destroy(ctx);
 }
 
