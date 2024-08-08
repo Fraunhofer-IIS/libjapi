@@ -38,6 +38,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+
 #include "creadline.h"
 
 #ifdef __cplusplus
@@ -53,6 +54,7 @@ typedef struct __japi_context {
 	void *userptr; /*!< Pointer to user data */
 	uint16_t num_clients; /*!< Number of connected clients */
 	uint16_t max_clients; /*!< Number of maximal allowed clients */
+	size_t max_linebuf_size;
 	pthread_mutex_t lock; /*!< Mutual access lock */
 	struct __japi_request *requests; /*!< Pointer to the JAPI request list */
 	struct __japi_pushsrv_context
@@ -146,6 +148,19 @@ int japi_register_request(japi_context *ctx, const char *req_name,
  * \returns	Only returns in case of an error.
  */
 int japi_start_server(japi_context *ctx, const char *port);
+
+/*!
+ * \brief Define the maximum line size a japi-command can have. Will overwrite 
+ * default value of 64 * 1024 * 1024 MiB. Some applications 
+ * need more capacity to transfer data.
+ * 
+ * \param ctx	JAPI context
+ * \param max_linebuf_size_user	Maximum line length of Japi-Commands
+ * 
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is
+ * returned.
+ */
+int japi_set_max_linebuf_size(japi_context *ctx, size_t max_linebuf_size_user);
 
 /*!
  * \brief Set the number of allowed clients

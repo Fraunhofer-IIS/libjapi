@@ -51,14 +51,7 @@
 extern "C" {
 #endif
 
-/*!
- * \brief Define the maximum line size a japi-command can have. Will overwrite 
- * default value of 64 * 1024 * 1024 in lijapi creadline.c. Some applications 
- * need more capacity to transfer data.
- * 
- * \param max_linebuf_size_user	creadline maximum buffer size
- */
-void japi_set_max_linebuf_size(size_t max_linebuf_size_user);
+
 
 /*!
  * \brief Buffer type for storing remaining bytes.
@@ -90,12 +83,13 @@ typedef struct __creadline_buffer {
  * \param fd		File descriptor
  * \param dst		Pointer to a pointer to the read line
  * \param buffer	creadline buffer for storing remaining characters
+ * \param max_linebuf_size		Maximum line length to parse
  *
  * \returns  -1 on error,
  *            0 on EOF or when a zero-length line was read (check dst),
  *            length of the read line otherwise
  */
-int creadline_r(int fd, void **dst, creadline_buf_t *buffer);
+int creadline_r(int fd, void **dst, creadline_buf_t *buffer, size_t max_linebuf_size);
 
 /*!
  * \brief Read a single line from a file descriptor.
@@ -107,12 +101,13 @@ int creadline_r(int fd, void **dst, creadline_buf_t *buffer);
  *
  * \param fd		File descriptor
  * \param dst		Pointer to a pointer to the read line
+ * \param max_linebuf_size		Maximum line length to parse
  *
  * \returns  -1 on error,
  *            0 on EOF or when a zero-length line was read (check dst),
  *            length of the read line otherwise
  */
-int creadline(int fd, void **dst);
+int creadline(int fd, void **dst, size_t max_linebuf_size);
 
 #ifdef __cplusplus
 }

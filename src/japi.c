@@ -40,6 +40,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <stddef.h>
 
 #include "japi.h"
 
@@ -310,6 +311,7 @@ japi_context *japi_init(void *userptr)
 	ctx->clients = NULL;
 	ctx->num_clients = 0;
 	ctx->max_clients = 0;
+	ctx->max_linebuf_size = 64 * 1024 * 1024; /* 64MiB maximum line length per default. */
 	ctx->include_args_in_response = false;
 	ctx->shutdown = false;
 
@@ -335,6 +337,19 @@ japi_context *japi_init(void *userptr)
 	japi_register_request_internal(ctx, "japi_cmd_list", &japi_cmd_list, true);
 
 	return ctx;
+}
+
+int japi_set_max_linebuf_size(japi_context *ctx, size_t max_linebuf_size_user)
+{
+	/* Error handling */
+	if (ctx == NULL) {
+		fprintf(stderr, "ERROR: JAPI context is NULL.\n");
+		return -1;
+	}
+
+	ctx->max_linebuf_size = max_linebuf_size_user;
+
+	return 0;
 }
 
 /*
@@ -558,7 +573,7 @@ int japi_start_server(japi_context *ctx, const char *port)
 				do {
 
 					ret = creadline_r(client->socket, (void **)&request,
-									  &(client->crl_buffer));
+									  &(client->crl_buffer),ctx->max_linebuf_size);
 					if (ret > 0) {
 
 						response = NULL;

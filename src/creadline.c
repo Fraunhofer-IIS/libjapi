@@ -40,14 +40,6 @@
 
 #include "creadline.h"
 
-
-static size_t max_linebuf_size =  64*1024*1024;
-
-void japi_set_max_linebuf_size(size_t max_linebuf_size_user)
-{
-	max_linebuf_size = max_linebuf_size_user;
-}
-
 static int strnpos(const char *s, int c, size_t maxlen)
 {
 	int pos;
@@ -64,7 +56,7 @@ static int strnpos(const char *s, int c, size_t maxlen)
 	return -1;
 }
 
-int creadline_r(int fd, void **dst, creadline_buf_t *buffer)
+int creadline_r(int fd, void **dst, creadline_buf_t *buffer, size_t max_linebuf_size)
 {
 	char *linebuf;
 	size_t linebuf_size;
@@ -188,7 +180,7 @@ error_ret:
 	return -1;
 }
 
-int creadline(int fd, void **dst)
+int creadline(int fd, void **dst, size_t max_linebuf_size)
 {
 	static int fd_last = -1;
 	static creadline_buf_t buffer;
@@ -199,6 +191,6 @@ int creadline(int fd, void **dst)
 		fd_last = fd;
 	}
 
-	return creadline_r(fd, dst, &buffer);
+	return creadline_r(fd, dst, &buffer, max_linebuf_size);
 }
 
