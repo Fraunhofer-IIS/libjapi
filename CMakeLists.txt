@@ -63,6 +63,8 @@ if(DOXYGEN_FOUND)
   )
 endif(DOXYGEN_FOUND)
 
+################################
+# Create unit test excecutable #
 option(LIBJAPI_ENABLE_TESTING "Enable testing with googletest" ON)
 if(LIBJAPI_ENABLE_TESTING)
   cmake_minimum_required(VERSION 3.14)
