@@ -63,7 +63,7 @@ if(DOXYGEN_FOUND)
   )
 endif(DOXYGEN_FOUND)
 
-option(LIBJAPI_ENABLE_TESTING "Enable testing with googletest" OFF)
+option(LIBJAPI_ENABLE_TESTING "Enable testing with googletest" ON)
 if(LIBJAPI_ENABLE_TESTING)
   add_subdirectory(test)
 endif(LIBJAPI_ENABLE_TESTING)
