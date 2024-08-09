@@ -51,8 +51,6 @@
 extern "C" {
 #endif
 
-
-
 /*!
  * \brief Buffer type for storing remaining bytes.
  */
