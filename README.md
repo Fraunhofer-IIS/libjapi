@@ -46,7 +46,6 @@ and running `make` afterwards again.
 
 To run the internal tests run
 
-    $ cd test
     $ ctest
 
 ## Demo
