@@ -37,9 +37,6 @@
 
 #include <stddef.h>
 
-/*! Override the maximum line size here (default: 64 MiB) */
-//#define CREADLINE_MAX_LINE_SIZE 10*1024*1024
-
 /*! Define creadline's block size.
  *
  * A small block size leads to computation overhead while a large block size
