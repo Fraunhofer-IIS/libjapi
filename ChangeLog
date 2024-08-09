@@ -1,6 +1,6 @@
 next
 =====
-* 
+* Added `japi_set_max_linebuf_size()` to enable parsing of large JSON commands
 
 0.4.0
 =====
