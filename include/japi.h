@@ -151,7 +151,7 @@ int japi_start_server(japi_context *ctx, const char *port);
 
 /*!
  * \brief Define the maximum line size a japi-command can have. Will overwrite 
- * default value of 64 * 1024 * 1024 MiB. Some applications 
+ * default value of 64MiB. Some applications 
  * need more capacity to transfer data.
  * 
  * \param ctx	JAPI context
