@@ -38,7 +38,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-
 #include "creadline.h"
 
 #ifdef __cplusplus
