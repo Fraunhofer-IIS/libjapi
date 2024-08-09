@@ -197,7 +197,9 @@ TEST(JAPI, SetMaxLinebufSize)
 	japi_register_request(ctx, "dummy_request_handler", &dummy_request_handler);
 
 	/* Configure context to include request arguments in response */
-	EXPECT_EQ(japi_set_max_linebuf_size(NULL, false), -1);
+	EXPECT_EQ(japi_set_max_linebuf_size(NULL, CREADLINE_BLOCK_SIZE), -1);
+
+	EXPECT_EQ(japi_set_max_linebuf_size(ctx, 0), -2);
 
 	/* Test valid line size */
 	EXPECT_EQ(japi_set_max_linebuf_size(ctx, CREADLINE_BLOCK_SIZE), 0);

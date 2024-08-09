@@ -347,6 +347,11 @@ int japi_set_max_linebuf_size(japi_context *ctx, size_t max_linebuf_size_user)
 		return -1;
 	}
 
+	if (max_linebuf_size_user < CREADLINE_BLOCK_SIZE) {
+		fprintf(stderr, "ERROR: Minimal linesize is CREADLINE_BLOCK_SIZE of %u bytes\n", CREADLINE_BLOCK_SIZE);
+		return -2;
+	}
+
 	ctx->max_linebuf_size = max_linebuf_size_user;
 
 	return 0;

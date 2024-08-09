@@ -153,12 +153,12 @@ int japi_start_server(japi_context *ctx, const char *port);
  *
  * Change default value of 64MiB = 64*1024*1024. Some applications need more
  * need more capacity to transfer data. The line parser will round down to powers of 2 times
- * CREADLINE_BLOCK_SIZE (0, 1*1024, 2*1024, 4*1024, 8*1024, ...).
+ * CREADLINE_BLOCK_SIZE (1*1024, 2*1024, 4*1024, 8*1024, ...).
  * 
  * \param ctx	JAPI context
- * \param max_linebuf_size_user	Maximum line length of Japi-Commands
+ * \param max_linebuf_size_user	Maximum line length of Japi-Commands (>1024)
  * 
- * \returns	On success, zero is returned. On error, -1 for empty JAPI context, is
+ * \returns	On success, zero is returned. On error, -1 for empty JAPI context and -2 on too small line length, is
  * returned.
  */
 int japi_set_max_linebuf_size(japi_context *ctx, size_t max_linebuf_size_user);
