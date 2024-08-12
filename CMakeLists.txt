@@ -24,6 +24,12 @@ pkg_search_module(JSONC REQUIRED IMPORTED_TARGET json-c)
 
 # create an object lib to avoid double compilation
 add_library(japi_objs OBJECT ${SOURCES} ${HEADERS})
+if(DEFINED CREADLINE_MAX_LINE_SIZE)
+  if(CREADLINE_MAX_LINE_SIZE LESS 1024)
+    message(FATAL_ERROR "Minimal linesize is CREADLINE_BLOCK_SIZE=1024 bytes")
+  endif()
+  target_compile_definitions(japi_objs PRIVATE CREADLINE_MAX_LINE_SIZE=${CREADLINE_MAX_LINE_SIZE})
+endif()
 target_compile_options(japi_objs PUBLIC "-pthread" "-D_POSIX_C_SOURCE=200809L")
 target_include_directories(japi_objs PUBLIC include/ ${JSONC_INCLUDE_DIRS})
 set_property(TARGET japi_objs PROPERTY POSITION_INDEPENDENT_CODE ON)
