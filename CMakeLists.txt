@@ -38,7 +38,7 @@ set_property(TARGET japi_objs PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_library(japi SHARED $<TARGET_OBJECTS:japi_objs>)
 add_library(japi-static STATIC $<TARGET_OBJECTS:japi_objs>)
 
-set_target_properties(japi PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}"
+set_target_properties(japi PROPERTIES PUBLIC_HEADER "${HEADERS}"
                                       SOVERSION ${SOVERSION})
 
 target_link_libraries(japi PkgConfig::JSONC)
