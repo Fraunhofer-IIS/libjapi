@@ -49,7 +49,7 @@ Install the shared and static japi library together with public header files:
 
     $ make install
 
-Make sure to add `/usr/local/include/` to your local system environment `C_INCLUDE_PATH` or `CPLUS_INCLUDE_PATH` and that `/usr/local/lib/` is in the standard linker search path when compiling and linking your application against libjapi.
+Make sure to add `/usr/local/include/japi/` to your local system environment `C_INCLUDE_PATH` or `CPLUS_INCLUDE_PATH` and that `/usr/local/lib/` is in the standard linker search path when compiling and linking your application against libjapi.
 
 ## Demo
 You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/libjapi-demo), with examples for all features from the repository listed below:

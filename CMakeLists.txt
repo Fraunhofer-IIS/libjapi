@@ -49,7 +49,7 @@ install(TARGETS japi japi-static
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  PUBLIC_HEADER DESTINATION include
+  PUBLIC_HEADER DESTINATION include/japi
 )
 
 ################################
