@@ -45,7 +45,7 @@ To run the internal tests run
 
     $ ctest
 
-Install the shared japi library together with public header files:
+Install the shared and static japi library together with public header files:
 
     $ make install
 
