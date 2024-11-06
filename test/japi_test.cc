@@ -600,6 +600,8 @@ TEST(JAPI, TcpKeepAliveSetup)
 	ASSERT_EQ(getsockopt(server_socket, IPPROTO_TCP, TCP_KEEPCNT, &opt_val, &opt_len),
 			  0);
 	EXPECT_EQ(opt_val, 6);
+
+	close(server_socket);
 }
 
 TEST(JAPI, JAPI_TcpKeepAliveFunctionality)
