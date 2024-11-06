@@ -615,6 +615,13 @@ static void *serverThread(void *arg)
 
 TEST(JAPI, JAPI_TcpKeepAliveFunctionality)
 {
+	/* Testing TCP-Keep-Alive functionality: Set max number of clients to 1, set
+	 * keep-alive settings and setup a JAPI server. First client is going to connect,
+	 * send data disconnects and disconnects ungracefully. When the TCP keep-alive works
+	 * the ungraceful disconnected client will be closed after the configured interval.
+	 * Client 2 should then be able to connect and send data (Will not be possible when
+	 * client1 socket still is alive since max number of clients is restricted to 1).
+	 * */
 	japi_context *ctx;
 
 	ctx = japi_init(NULL);
