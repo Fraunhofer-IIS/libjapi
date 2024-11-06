@@ -21,15 +21,19 @@ Copyright (c) 2023 Fraunhofer IIS
  */
 
 #include <gtest/gtest.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <stdbool.h>
+#include <sys/socket.h>
 
 extern "C" {
-#include "japi.h"
-#include "japi_intern.h"
-#include "japi_pushsrv.h"
-#include "japi_pushsrv_intern.h"
-#include "japi_utils.h"
-#include "rw_n.h"
+#include <japi.h>
+#include <japi_intern.h>
+#include <japi_pushsrv.h>
+#include <japi_pushsrv_intern.h>
+#include <japi_utils.h>
+#include <networking.h>
+#include <rw_n.h>
 }
 
 /* The handler for japi_register_request test */
@@ -550,4 +554,159 @@ TEST(JAPI_Push_Service, PushServiceRemoveEntryFromLInkedList)
 	japi_pushsrv_list(ctx, NULL, jobj);
 	EXPECT_STREQ(json_object_to_json_string(jobj),
 				 "{ \"services\": [ \"test04\", \"test03\" ] }");
+}
+
+TEST(JAPI, TcpKeepAliveSetup)
+{
+	japi_context *ctx;
+
+	ctx = japi_init(NULL);
+
+	/* Activate keepalive in socket. Test different parameters */
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10, 6), 0);
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 0, 60, 10, 6), 0);
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 0.999, 6),
+			  -1); // tcp_keepalive_intvl > 0, implicit type conversion
+	EXPECT_EQ(japi_set_tcp_keepalive(ctx, 1, -60, 10, 0), -1); // positive values only
+
+	/* Test if options are set correctly in context*/
+	ASSERT_EQ(japi_set_tcp_keepalive(ctx, 1, 60, 10, 6), 0);
+	EXPECT_EQ(ctx->tcp_keepalive_enable, 1);
+	EXPECT_EQ(ctx->tcp_keepalive_time, 60);
+	EXPECT_EQ(ctx->tcp_keepalive_intvl, 10);
+	EXPECT_EQ(ctx->tcp_keepalive_probes, 6);
+
+	/* Test if sockoptions are actually set */
+	int opt_val;
+	socklen_t opt_len = sizeof(opt_val);
+	int server_socket = tcp_start_server("1234");
+	ASSERT_EQ(enable_tcp_keepalive(server_socket, ctx->tcp_keepalive_enable,
+								   ctx->tcp_keepalive_time, ctx->tcp_keepalive_intvl,
+								   ctx->tcp_keepalive_probes),
+			  0);
+
+	ASSERT_EQ(getsockopt(server_socket, SOL_SOCKET, SO_KEEPALIVE, &opt_val, &opt_len),
+			  0);
+	EXPECT_EQ(opt_val, 1);
+
+	ASSERT_EQ(getsockopt(server_socket, IPPROTO_TCP, TCP_KEEPIDLE, &opt_val, &opt_len),
+			  0);
+	EXPECT_EQ(opt_val, 60);
+
+	ASSERT_EQ(getsockopt(server_socket, IPPROTO_TCP, TCP_KEEPINTVL, &opt_val, &opt_len),
+			  0);
+	EXPECT_EQ(opt_val, 10);
+
+	ASSERT_EQ(getsockopt(server_socket, IPPROTO_TCP, TCP_KEEPCNT, &opt_val, &opt_len),
+			  0);
+	EXPECT_EQ(opt_val, 6);
+
+	close(server_socket);
+}
+
+static void *serverThread(void *arg)
+{
+	japi_context *ctx = (japi_context*) arg;
+
+	japi_start_server(ctx, "1234");
+
+	pthread_exit(0);
+}
+
+TEST(JAPI, JAPI_TcpKeepAliveFunctionality)
+{
+	/* Testing TCP-Keep-Alive functionality: Set max number of clients to 1, set
+	 * keep-alive settings and setup a JAPI server. First client is going to connect,
+	 * send data disconnects and disconnects ungracefully. When the TCP keep-alive works
+	 * the ungraceful disconnected client will be closed after the configured interval.
+	 * Client 2 should then be able to connect and send data (Will not be possible when
+	 * client1 socket still is alive since max number of clients is restricted to 1).
+	 * */
+	japi_context *ctx;
+
+	ctx = japi_init(NULL);
+
+	/* Remove any ungracefull disconnected client socket after
+	 * 1s + 2 * 1s = 4s timeout. */
+	ASSERT_EQ(japi_set_tcp_keepalive(ctx, 1, 1, 1, 2), 0);
+
+	/* Allow only one client at a time. */
+	ASSERT_EQ(japi_set_max_allowed_clients(ctx, 1), 0);
+
+	pthread_t tid;
+	pthread_create(&tid, NULL, serverThread, (void*) ctx);
+
+	/* Wait for the server to start. */
+	/* TODO: Use mutex */
+	sleep(2);
+
+	// Connect the client socket to the server
+	struct sockaddr_in serverAddr = {0};
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(1234);
+	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	int clientSock1, clientSock2;
+	const char *message =  "{'japi_request': 'japi_cmd_list'}\n";
+	ssize_t num_bytes_sent, numBytes_recv;
+	char buf[1024];
+
+	/***** CLIENT 1 *****/
+	// Create a client socket and send request
+	clientSock1 = socket(AF_INET, SOCK_STREAM, 0);
+	ASSERT_NE(clientSock1, -1) << "Failed to create client socket1";
+	ASSERT_EQ(connect(clientSock1, (struct sockaddr *)&serverAddr,
+	sizeof(serverAddr)), 0) << "Failed to connect client socket1";
+	num_bytes_sent = send(clientSock1, message, strlen(message), 0);
+	ASSERT_EQ(num_bytes_sent, strlen(message)) << "Message was not fully sent";
+
+	// Receive reponse of server
+	memset(buf, 0, sizeof(buf));
+	numBytes_recv = recv(clientSock1, buf, sizeof(buf), 0);
+	ASSERT_NE(numBytes_recv, -1) << "Receive message failed";
+	ASSERT_NE(numBytes_recv, 0) << "Received message is empty";
+
+	/* Close the first client socket ungracefully.
+	 * TODO: Find a way to do this and replace close(). */
+	close(clientSock1);
+
+	/********************/
+
+	/* Wait for the keep-Alive mechanism to kill client 1 socket. */
+	sleep(5);
+
+	/***** CLIENT 2 *****/
+
+	/* Connecting a second client to the server with succesfull send and receive requires the frist client to
+	 * to be remove properly. If the TCP-KEEP alive mechanism was not working properly, the first client will
+	 * be still alive after the waiting time and following receive of client 2 will signal an empty message
+	 * */
+	// Create a client socket and send request
+	clientSock2 = socket(AF_INET, SOCK_STREAM, 0);
+	ASSERT_NE(clientSock2, -1) << "Failed to create client socket2";
+	ASSERT_EQ(connect(clientSock2, (struct sockaddr *)&serverAddr,
+	sizeof(serverAddr)), 0) << "Failed to connect client socket2";
+	num_bytes_sent = send(clientSock2, message, strlen(message), 0);
+	ASSERT_EQ(num_bytes_sent, strlen(message)) << "Message was not fully sent";
+
+	// Receive reponse of server
+	memset(buf, 0, sizeof(buf));
+	numBytes_recv = recv(clientSock2, buf, sizeof(buf), 0);
+	ASSERT_NE(numBytes_recv, -1) << "Receive message failed";
+	ASSERT_NE(numBytes_recv, 0) << "Received message is empty";
+
+	close(clientSock2);
+
+	/********************/
+
+	/* Wait for debug messages just in case server is faster with closing. */
+	sleep(1);
+
+	/* Signal shutdown to server. */
+	ctx->shutdown = true;
+
+	/* Wait for server to end. */
+	pthread_join(tid, NULL);
+	japi_destroy(ctx);
+	return;
 }
