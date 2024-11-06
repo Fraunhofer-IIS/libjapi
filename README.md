@@ -45,6 +45,13 @@ To run the internal tests run
 
     $ ctest
 
+### Tests
+The testsuite from [googletest](https://github.com/google/googletest) is used. To run tests, call
+
+    $ cd build
+    $ make run_test
+
+
 ## Demo
 You can clone the [demo project](https://git01.iis.fhg.de/ks-ip-lib/software/libjapi-demo), with examples for all features from the repository listed below:
 
