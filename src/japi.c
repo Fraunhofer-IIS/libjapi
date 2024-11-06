@@ -658,6 +658,9 @@ int japi_start_server(japi_context *ctx, const char *port)
 				perror("ERROR: accept() failed\n");
 				return -1;
 			}
+
+			prntdbg("Client socket to add: %d, current number of clients %d\n", client_socket, ctx->num_clients);
+
 			if (ctx->max_clients == 0 || ctx->num_clients < ctx->max_clients) {
 				japi_add_client(ctx, client_socket);
 				prntdbg("client %d added\n", client_socket);
