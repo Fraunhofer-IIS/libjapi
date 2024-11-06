@@ -604,76 +604,102 @@ TEST(JAPI, TcpKeepAliveSetup)
 	close(server_socket);
 }
 
+static void *serverThread(void *arg)
+{
+	japi_context *ctx = (japi_context*) arg;
+
+	japi_start_server(ctx, "1234");
+
+	pthread_exit(0);
+}
+
 TEST(JAPI, JAPI_TcpKeepAliveFunctionality)
 {
-	// this test recreates big parts from `japi_start_server`
-	// cannot use `japi_start_server` here as it is blocking, so cannot cut connection
-	// while running.
-	// Do I need handling for SIGPIPE once keepalive strikes?
+	japi_context *ctx;
 
-	// create and configure server socket
-	int server_socket = tcp_start_server("1234");
-	ASSERT_GT(server_socket, 0);
+	ctx = japi_init(NULL);
 
-	ASSERT_EQ(enable_tcp_keepalive(server_socket, 1, 1, 1, 2), 0);
+	/* Remove any ungracefull disconnected client socket after
+	 * 1s + 2 * 1s = 4s timeout. */
+	ASSERT_EQ(japi_set_tcp_keepalive(ctx, 1, 1, 1, 2), 0);
 
-	// Start listening for incoming connections
-	ASSERT_EQ(listen(server_socket, 10), 0) << "Failed to listen on server socket";
+	/* Allow only one client at a time. */
+	ASSERT_EQ(japi_set_max_allowed_clients(ctx, 1), 0);
 
-	// Create a client socket
-	int clientSock = socket(AF_INET, SOCK_STREAM, 0);
-	ASSERT_NE(clientSock, -1) << "Failed to create client socket";
+	pthread_t tid;
+	pthread_create(&tid, NULL, serverThread, (void*) ctx);
+
+	/* Wait for the server to start. */
+	/* TODO: Use mutex */
+	sleep(2);
 
 	// Connect the client socket to the server
 	struct sockaddr_in serverAddr = {0};
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(1234);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	// ASSERT_EQ(connect(clientSock, (struct sockaddr *)&serverAddr,
-	// sizeof(serverAddr)), 0) << "Failed to connect client socket";
 
-	// Close the client socket abruptly to simulate an ungraceful disconnection
-	// close(clientSock);
-
-	// Accept the incoming connection on the server side
-	// int acceptedSock = accept(server_socket, NULL, NULL);
-	// ASSERT_NE(acceptedSock, -1) << "Failed to accept connection on server socket";
-
-	// Set a timeout for receiving data on the accepted socket
-	// struct timeval timeout;
-	// timeout.tv_sec = 5;
-	// timeout.tv_usec = 0;
-	// setsockopt(acceptedSock, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout,
-	// sizeof(timeout));
-
-	// Check if the client disconnected ungracefully by receiving data from the
-	// client
+	int clientSock1, clientSock2;
+	const char *message =  "{'japi_request': 'japi_cmd_list'}\n";
+	ssize_t num_bytes_sent, numBytes_recv;
 	char buf[1024];
-	// ssize_t numBytes = recv(acceptedSock, buf, sizeof(buf), 0);
-	// ASSERT_EQ(numBytes, 0) << "Client did not disconnect ungracefully";
 
-	// wait until keepalive kicks in, then check if socket is closed automatically
-	// sleep(3);
-
-	// reconnect from client side
-	ASSERT_EQ(connect(clientSock, (struct sockaddr *)&serverAddr, sizeof(serverAddr)),
-			  0)
-		<< "Failed to connect client socket (2)";
-	// Accept again the incoming connection on the server side
-	int acceptedSock = accept(server_socket, NULL, NULL);
-	ASSERT_NE(acceptedSock, -1) << "Failed to accept connection on server socket (2)";
-	// Send the message to the server
-	const char *message = "Hello, server!";
-	ssize_t num_bytes_sent = send(clientSock, message, strlen(message), 0);
+	/***** CLIENT 1 *****/
+	// Create a client socket and send request
+	clientSock1 = socket(AF_INET, SOCK_STREAM, 0);
+	ASSERT_NE(clientSock1, -1) << "Failed to create client socket1";
+	ASSERT_EQ(connect(clientSock1, (struct sockaddr *)&serverAddr,
+	sizeof(serverAddr)), 0) << "Failed to connect client socket1";
+	num_bytes_sent = send(clientSock1, message, strlen(message), 0);
 	ASSERT_EQ(num_bytes_sent, strlen(message)) << "Message was not fully sent";
 
-	// Check if the client disconnected ungracefully by receiving data from the client
-	ssize_t numBytes_recv = recv(acceptedSock, buf, sizeof(buf), 0);
-	ASSERT_EQ(numBytes_recv, strlen(message)) << "Sent message was not fully received";
+	// Receive reponse of server
+	memset(buf, 0, sizeof(buf));
+	numBytes_recv = recv(clientSock1, buf, sizeof(buf), 0);
+	ASSERT_NE(numBytes_recv, -1) << "Receive message failed";
+	ASSERT_NE(numBytes_recv, 0) << "Received message is empty";
 
-	// Close the accepted socket
-	close(acceptedSock);
+	/* Close the first client socket ungracefully.
+	 * TODO: Find a way to do this and replace close(). */
+	close(clientSock1);
 
-	// Close the server socket
-	close(server_socket);
+	/********************/
+
+	/* Wait for the keep-Alive mechanism to kill client 1 socket. */
+	sleep(5);
+
+	/***** CLIENT 2 *****/
+
+	/* Connecting a second client to the server with succesfull send and receive requires the frist client to
+	 * to be remove properly. If the TCP-KEEP alive mechanism was not working properly, the first client will
+	 * be still alive after the waiting time and following receive of client 2 will signal an empty message
+	 * */
+	// Create a client socket and send request
+	clientSock2 = socket(AF_INET, SOCK_STREAM, 0);
+	ASSERT_NE(clientSock2, -1) << "Failed to create client socket2";
+	ASSERT_EQ(connect(clientSock2, (struct sockaddr *)&serverAddr,
+	sizeof(serverAddr)), 0) << "Failed to connect client socket2";
+	num_bytes_sent = send(clientSock2, message, strlen(message), 0);
+	ASSERT_EQ(num_bytes_sent, strlen(message)) << "Message was not fully sent";
+
+	// Receive reponse of server
+	memset(buf, 0, sizeof(buf));
+	numBytes_recv = recv(clientSock2, buf, sizeof(buf), 0);
+	ASSERT_NE(numBytes_recv, -1) << "Receive message failed";
+	ASSERT_NE(numBytes_recv, 0) << "Received message is empty";
+
+	close(clientSock2);
+
+	/********************/
+
+	/* Wait for debug messages just in case server is faster with closing. */
+	sleep(1);
+
+	/* Signal shutdown to server. */
+	ctx->shutdown = true;
+
+	/* Wait for server to end. */
+	pthread_join(tid, NULL);
+	japi_destroy(ctx);
+	return;
 }
