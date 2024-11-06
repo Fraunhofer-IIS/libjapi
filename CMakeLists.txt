@@ -38,19 +38,18 @@ set_property(TARGET japi_objs PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_library(japi SHARED $<TARGET_OBJECTS:japi_objs>)
 add_library(japi-static STATIC $<TARGET_OBJECTS:japi_objs>)
 
-set_target_properties(japi PROPERTIES PUBLIC_HEADER "${PUBLIC_HEADERS}"
+set_target_properties(japi PROPERTIES PUBLIC_HEADER "${HEADERS}"
                                       SOVERSION ${SOVERSION})
 
 target_link_libraries(japi PkgConfig::JSONC)
 target_link_libraries(japi-static PkgConfig::JSONC)
 
-# only install libjapi.so because the static version is usually linked directly
-# from the build directory
-install(TARGETS japi
+# install shared and static japi library (.so and .a)
+install(TARGETS japi japi-static
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  PUBLIC_HEADER DESTINATION include
+  PUBLIC_HEADER DESTINATION include/japi
 )
 
 ################################

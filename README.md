@@ -41,11 +41,16 @@ A Makefile is generated. Run 'make' to build the libjapi libraries.
 
 A shared and a static library is built. Tests are built by default. They can be disabled using the command `cmake -DLIBJAPI_ENABLE_TESTING=OFF ../` variable.
 
+Install the shared and static japi library together with public header files:
+
+    $ make install
+
+Make sure to add `/usr/local/include/japi/` to your local system environment `C_INCLUDE_PATH` or `CPLUS_INCLUDE_PATH` and that `/usr/local/lib/` is in the standard linker search path when compiling and linking your application against libjapi.
+### Tests
 To run the internal tests run
 
     $ ctest
 
-### Tests
 The testsuite from [googletest](https://github.com/google/googletest) is used. To run tests, call
 
     $ cd build
