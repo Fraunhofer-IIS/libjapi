@@ -353,6 +353,11 @@ japi_pushsrv_context *japi_pushsrv_register(japi_context *ctx, const char *pushs
 		return NULL;
 	}
 
+	if (pthread_cond_init(&psc->cond, NULL) != 0) {
+		fprintf(stderr, "ERROR: cond initialization has failed\n");
+		return NULL;
+	}
+
 	/* Point to last struct */
 	psc->next = ctx->push_services;
 	ctx->push_services = psc;
@@ -409,6 +414,8 @@ int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc)
 	japi_pushsrv_stop(psc);
 
 	pthread_mutex_destroy(&(psc->lock));
+	pthread_cond_destroy(&(psc->cond));
+
 	free_pushsrv(psc);
 
 	return 0;
@@ -573,7 +580,11 @@ int japi_pushsrv_stop(japi_pushsrv_context *psc)
 	}
 
 	/* Tell routine to end */
+	pthread_mutex_lock(&psc->lock);
 	psc->enabled = false;
+	/* abort condition, may or may not be used by user */
+	pthread_cond_broadcast(&psc->cond);
+	pthread_mutex_unlock(&psc->lock);
 
 	/* Wait for thread to end and close it */
 	if (pthread_join(psc->thread_id, NULL) != 0) {
