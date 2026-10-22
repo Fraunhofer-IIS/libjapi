@@ -350,6 +350,7 @@ japi_pushsrv_context *japi_pushsrv_register(japi_context *ctx, const char *pushs
 
 	if (pthread_mutex_init(&(psc->lock), NULL) != 0) {
 		fprintf(stderr, "ERROR: mutex initialization has failed\n");
+		free_pushsrv(psc);
 		return NULL;
 	}
 
