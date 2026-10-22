@@ -581,8 +581,8 @@ int japi_pushsrv_stop(japi_pushsrv_context *psc)
 	}
 
 	if (psc->enabled == false) {
-		fprintf(stderr, "ERROR: Thread not running.\n");
-		return -2;
+		// there are no threads running, which can be joined
+		return 0;
 	}
 
 	/* Tell routine to end */
