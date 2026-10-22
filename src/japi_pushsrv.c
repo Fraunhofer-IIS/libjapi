@@ -350,6 +350,14 @@ japi_pushsrv_context *japi_pushsrv_register(japi_context *ctx, const char *pushs
 
 	if (pthread_mutex_init(&(psc->lock), NULL) != 0) {
 		fprintf(stderr, "ERROR: mutex initialization has failed\n");
+		free_pushsrv(psc);
+		return NULL;
+	}
+
+	if (pthread_cond_init(&psc->cond, NULL) != 0) {
+		fprintf(stderr, "ERROR: cond initialization has failed\n");
+		pthread_mutex_destroy(&psc->lock);
+                free_pushsrv(psc);
 		return NULL;
 	}
 
@@ -406,9 +414,14 @@ int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc)
 	}
 	pthread_mutex_unlock(&(psc->lock));
 
-	japi_pushsrv_stop(psc);
+	if (japi_pushsrv_stop(psc) < 0) {
+		fprintf(stderr, "ERROR: Failed to stop push service\n");
+		return -1; 
+	}
 
 	pthread_mutex_destroy(&(psc->lock));
+	pthread_cond_destroy(&(psc->cond));
+
 	free_pushsrv(psc);
 
 	return 0;
@@ -568,12 +581,16 @@ int japi_pushsrv_stop(japi_pushsrv_context *psc)
 	}
 
 	if (psc->enabled == false) {
-		fprintf(stderr, "ERROR: Thread not running.\n");
-		return -2;
+		// there are no threads running, which can be joined
+		return 0;
 	}
 
 	/* Tell routine to end */
+	pthread_mutex_lock(&psc->lock);
 	psc->enabled = false;
+	/* abort condition, may or may not be used by user */
+	pthread_cond_broadcast(&psc->cond);
+	pthread_mutex_unlock(&psc->lock);
 
 	/* Wait for thread to end and close it */
 	if (pthread_join(psc->thread_id, NULL) != 0) {

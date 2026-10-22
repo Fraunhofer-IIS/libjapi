@@ -63,6 +63,7 @@ typedef struct __japi_pushsrv_context {
 	japi_pushsrv_routine routine; /*!< Function to call */
 	volatile bool enabled; /*!< Flag to end routine */
 	pthread_mutex_t lock; /*!< Mutual access lock */
+	pthread_cond_t cond; /*!< Stop condition */
 	struct __japi_client *clients; /*!< Pointer to the JAPI client context */
 	struct __japi_pushsrv_context *next; /*!< Pointer to the next push service or NULL */
 	void *userptr; /*!< Pointer to user data */
@@ -122,7 +123,7 @@ int japi_pushsrv_start(japi_pushsrv_context *psc, japi_pushsrv_routine routine);
 /*!
  * \brief Stop push service routine
  *
- * Wait for thread to end and close it.
+ * Signal push service thread stop condition, wait for thread to end and close it.
  *
  * \param psc	JAPI push service context
  *
