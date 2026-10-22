@@ -356,6 +356,8 @@ japi_pushsrv_context *japi_pushsrv_register(japi_context *ctx, const char *pushs
 
 	if (pthread_cond_init(&psc->cond, NULL) != 0) {
 		fprintf(stderr, "ERROR: cond initialization has failed\n");
+		pthread_mutex_destroy(&psc->lock);
+                free_pushsrv(psc);
 		return NULL;
 	}
 
