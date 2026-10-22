@@ -412,7 +412,10 @@ int japi_pushsrv_destroy(japi_context *ctx, japi_pushsrv_context *psc)
 	}
 	pthread_mutex_unlock(&(psc->lock));
 
-	japi_pushsrv_stop(psc);
+	if (japi_pushsrv_stop(psc) < 0) {
+		fprintf(stderr, "ERROR: Failed to stop push service\n");
+		return -1; 
+	}
 
 	pthread_mutex_destroy(&(psc->lock));
 	pthread_cond_destroy(&(psc->cond));
